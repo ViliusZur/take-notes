@@ -495,7 +495,7 @@
             <li>Skipped reason visible in the UI.</li>
             <li>Simple daily notes.</li>
             <li>Calendar/history for previous weeks.</li>
-            <li>Sunday planning reminder by email.</li>
+            <li>Sunday planning reminder by email, configurable after authentication without vault unlock.</li>
           </ul>
         </article>
 
@@ -515,7 +515,10 @@
       <div class="section-head">
         <div>
           <h2>UX Flow</h2>
-          <p>Authentication and vault unlock are separate steps. Planning is centered around the current week.</p>
+          <p>
+            Authentication and vault unlock are separate steps. Notification settings require only
+            authentication; private planning content requires vault unlock.
+          </p>
         </div>
       </div>
 
@@ -524,8 +527,10 @@
 flowchart TD
   A[Open app] --> B{Authenticated?}
   B -- No --> C[Login with email/password or social provider]
-  B -- Yes --> D{Vault unlocked?}
-  C --> D
+  B -- Yes --> S[Authenticated app shell]
+  C --> S
+  S --> Q[Sunday reminder settings]
+  S --> D{Vault unlocked?}
   D -- No --> E[Enter vault passphrase]
   E --> F{Passphrase works?}
   F -- Yes --> G[Current week planner]
@@ -540,7 +545,6 @@ flowchart TD
   M --> N[Mark tasks done or skipped]
   N --> O[Add skipped reason if needed]
   G --> P[Calendar and previous weeks]
-  G --> Q[Sunday reminder settings]
         </pre>
       </div>
 
@@ -828,7 +832,7 @@ erDiagram
   USERS ||--|| VAULTS : owns
   VAULTS ||--o{ VAULT_KEY_WRAPPINGS : has
   VAULTS ||--o{ ENCRYPTED_WEEK_RECORDS : contains
-  VAULTS ||--o{ NOTIFICATION_SETTINGS : has
+  USERS ||--o{ NOTIFICATION_SETTINGS : has
   USERS ||--o{ SESSIONS : has
 
   USERS {
@@ -885,7 +889,7 @@ erDiagram
 
   NOTIFICATION_SETTINGS {
     uuid id PK
-    uuid vault_id FK
+    uuid user_id FK
     string channel
     string timezone
     string schedule
@@ -929,7 +933,7 @@ erDiagram
             <li>User id and login identities.</li>
             <li>Vault id and crypto version.</li>
             <li>Week start date, ISO week, and year.</li>
-            <li>Notification schedule and timezone.</li>
+            <li>Account-level notification schedule and timezone.</li>
             <li>Creation/update timestamps.</li>
           </ul>
         </article>
@@ -940,7 +944,11 @@ erDiagram
       <div class="section-head">
         <div>
           <h2>API Surface</h2>
-          <p>Backend endpoints move ciphertext and metadata. They do not understand private content.</p>
+          <p>
+            Backend endpoints move ciphertext and metadata. They do not understand private content.
+            Routes use RESTful nouns: the HTTP method decides the action, the path identifies the resource,
+            and route paths avoid verbs.
+          </p>
         </div>
       </div>
 
@@ -955,28 +963,28 @@ erDiagram
         <tbody>
           <tr>
             <td><code>auth</code></td>
-            <td><code>POST /auth/login</code>, <code>POST /auth/register</code>, <code>GET /auth/:provider</code></td>
+            <td><code>POST /sessions</code>, <code>GET /sessions</code>, <code>DELETE /sessions/:sessionId</code>, <code>GET /oauth/providers/:provider/authorizations</code></td>
             <td>Account authentication through local credentials and social providers.</td>
           </tr>
           <tr>
             <td><code>vault</code></td>
-            <td><code>POST /vault/setup</code>, <code>GET /vault/wrappings</code>, <code>PUT /vault/wrappings</code></td>
+            <td><code>POST /vaults</code>, <code>GET /vaults/:vaultId/key-wrappings</code>, <code>GET /vaults/:vaultId/key-wrappings/:keyWrappingId</code>, <code>PUT /vaults/:vaultId/key-wrappings/:keyWrappingId</code></td>
             <td>Store encrypted vault key wrappings and recovery state.</td>
           </tr>
           <tr>
             <td><code>weeks</code></td>
-            <td><code>GET /weeks/:year/:isoWeek</code>, <code>PUT /weeks/:id</code>, <code>GET /weeks</code></td>
+            <td><code>GET /years/:year/weeks</code>, <code>GET /years/:year/weeks/:isoWeek</code>, <code>PUT /years/:year/weeks/:isoWeek</code></td>
             <td>Read and write encrypted weekly planner records.</td>
           </tr>
           <tr>
             <td><code>notifications</code></td>
-            <td><code>GET /notifications/settings</code>, <code>PUT /notifications/settings</code></td>
-            <td>Manage Sunday reminder settings and email delivery preferences.</td>
+            <td><code>GET /users/:userId/notification-settings</code>, <code>PUT /users/:userId/notification-settings</code></td>
+            <td>Manage Sunday reminder settings and email delivery preferences after authentication, without requiring vault unlock.</td>
           </tr>
           <tr>
             <td><code>users</code></td>
-            <td><code>GET /me</code>, <code>PUT /me</code>, <code>DELETE /me</code></td>
-            <td>Manage profile and account lifecycle.</td>
+            <td><code>POST /users</code>, <code>GET /users/:userId</code>, <code>PATCH /users/:userId</code>, <code>DELETE /users/:userId</code></td>
+            <td>Create accounts, manage profiles, and handle account lifecycle.</td>
           </tr>
         </tbody>
       </table>
@@ -1131,6 +1139,7 @@ flowchart LR
             <li>Use simple text notes in V1.</li>
             <li>Use client-side E2EE for private planner content.</li>
             <li>Require a vault passphrase for all users, including social login users.</li>
+            <li>Keep notification settings account-level, requiring authentication but not vault unlock.</li>
             <li>Generate a recovery key during setup.</li>
             <li>Use a modular monolith backend.</li>
             <li>Dockerize and deploy to Railway.</li>
