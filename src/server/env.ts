@@ -78,11 +78,20 @@ export function appUrl() {
   return NEXT_PUBLIC_APP_URL ?? BETTER_AUTH_URL ?? vercelUrl() ?? "http://localhost:3000";
 }
 
-/** Origins allowed to call the auth API: the app URL plus this Vercel deployment's own URLs. */
+/** A custom domain is usually reachable with and without "www."; trust both. */
+function withWwwTwin(origin: string): string[] {
+  const url = new URL(origin);
+  if (url.hostname === "localhost" || url.hostname.endsWith(".vercel.app")) return [url.origin];
+  const twin = url.hostname.startsWith("www.") ? url.hostname.slice(4) : `www.${url.hostname}`;
+  return [url.origin, `${url.protocol}//${twin}${url.port ? `:${url.port}` : ""}`];
+}
+
+/** Origins allowed to call the auth API: the app URL (and its www twin) plus this Vercel deployment's URLs. */
 export function trustedOrigins() {
   const { VERCEL_URL, VERCEL_BRANCH_URL, VERCEL_PROJECT_PRODUCTION_URL } = env();
   const hosts = [VERCEL_URL, VERCEL_BRANCH_URL, VERCEL_PROJECT_PRODUCTION_URL].filter(Boolean);
-  return [appUrl(), ...hosts.map((host) => `https://${host}`)];
+  const origins = [appUrl(), ...hosts.map((host) => `https://${host}`)];
+  return [...new Set(origins.flatMap(withWwwTwin))];
 }
 
 export function allowedCountryCodes() {

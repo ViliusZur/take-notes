@@ -127,3 +127,36 @@ describe("environment parsing", () => {
     }
   });
 });
+
+describe("trusted origins", () => {
+  const VARS = ["BETTER_AUTH_URL", "VERCEL_URL", "VERCEL_PROJECT_PRODUCTION_URL", "VERCEL_ENV"] as const;
+
+  afterEach(() => {
+    for (const name of VARS) delete process.env[name];
+    resetEnvCacheForTests();
+  });
+
+  it("trusts a custom domain with and without www, plus the Vercel URLs", async () => {
+    const { trustedOrigins } = await import("@/server/env");
+    process.env.BETTER_AUTH_URL = "https://weekly-notes.com";
+    process.env.VERCEL_URL = "take-notes-abc123.vercel.app";
+    process.env.VERCEL_PROJECT_PRODUCTION_URL = "www.weekly-notes.com";
+    resetEnvCacheForTests();
+    expect(trustedOrigins().sort()).toEqual(
+      [
+        "https://weekly-notes.com",
+        "https://www.weekly-notes.com",
+        "https://take-notes-abc123.vercel.app",
+      ].sort(),
+    );
+  });
+
+  it("uses the production domain on Vercel when no URL is configured", async () => {
+    const { appUrl, trustedOrigins } = await import("@/server/env");
+    process.env.VERCEL_ENV = "production";
+    process.env.VERCEL_PROJECT_PRODUCTION_URL = "weekly-notes.com";
+    resetEnvCacheForTests();
+    expect(appUrl()).toBe("https://weekly-notes.com");
+    expect(trustedOrigins()).toContain("https://www.weekly-notes.com");
+  });
+});
