@@ -109,3 +109,21 @@ describe("optional features", () => {
     expect(sent).toEqual([]);
   });
 });
+
+describe("environment parsing", () => {
+  it("treats empty values as unset so defaults apply", async () => {
+    const { env } = await import("@/server/env");
+    process.env.VOICE_PROVIDER = "";
+    process.env.CALL_MONTHLY_CAP = "";
+    process.env.EXTRACTION_MODEL = "";
+    resetEnvCacheForTests();
+    try {
+      expect(env().VOICE_PROVIDER).toBeUndefined();
+      expect(env()).toMatchObject({ CALL_MONTHLY_CAP: 6, EXTRACTION_MODEL: "claude-opus-5-5" });
+      expect(features().voice).toBeNull();
+    } finally {
+      delete process.env.CALL_MONTHLY_CAP;
+      delete process.env.EXTRACTION_MODEL;
+    }
+  });
+});

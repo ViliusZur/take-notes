@@ -19,6 +19,7 @@ import type { MeDto } from "@/lib/api-types";
 import { authClient } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
 import { Logo } from "./logo";
+import { ThemeToggle } from "./theme-toggle";
 
 const links = [
   { href: "/week", label: "Week", icon: CalendarDays },
@@ -87,6 +88,7 @@ export function AppHeader() {
         <Suspense fallback={<NavLinks pathname={null} />}>
           <ActiveNavLinks />
         </Suspense>
+        <ThemeToggle />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" size="sm" className="max-w-28 truncate sm:max-w-40">

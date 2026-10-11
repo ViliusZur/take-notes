@@ -44,7 +44,8 @@ let cached: Env | undefined;
 
 /** Parsed lazily so `next build` does not require runtime secrets. Restart the server after changing env files. */
 export function env(): Env {
-  cached ??= envSchema.parse(process.env);
+  // `KEY=` with nothing after it (as copied from .env.example) means "not set", so defaults apply.
+  cached ??= envSchema.parse(Object.fromEntries(Object.entries(process.env).filter(([, value]) => value !== "")));
   return cached;
 }
 

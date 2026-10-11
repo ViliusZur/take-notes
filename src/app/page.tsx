@@ -1,6 +1,7 @@
 import { CalendarDays, NotebookPen, PhoneCall } from "lucide-react";
 import Link from "next/link";
 import { Logo } from "@/components/app/logo";
+import { ThemeToggle } from "@/components/app/theme-toggle";
 import { Marker, toneClasses, type Tone } from "@/components/planner/marker";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -30,11 +31,14 @@ export default function Home() {
   return (
     <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col justify-center gap-14 px-4 py-16 sm:px-6">
       <div className="space-y-6">
-        <Logo />
+        <div className="flex items-center justify-between">
+          <Logo />
+          <ThemeToggle />
+        </div>
         <h1 className="max-w-3xl font-display text-4xl leading-[1.1] font-bold tracking-tight sm:text-6xl">
           Plan next week in a{" "}
           <span className="relative inline-block">
-            <span className="absolute inset-x-[-0.15em] bottom-[0.08em] h-[0.45em] -rotate-1 rounded-sm bg-hl-yellow" aria-hidden />
+            <span className="absolute inset-x-[-0.15em] bottom-[0.08em] h-[0.45em] -rotate-1 rounded-sm bg-hl-yellow dark:opacity-40" aria-hidden />
             <span className="relative">five-minute</span>
           </span>{" "}
           phone call.

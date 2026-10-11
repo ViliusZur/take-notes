@@ -42,7 +42,13 @@ export function AuthForm({ mode, googleEnabled }: { mode: Mode; googleEnabled: b
 
     setPending(false);
     if (result.error) {
-      setError(result.error.message ?? "Could not sign you in");
+      const fallback =
+        result.error.status >= 500
+          ? "Something went wrong on our side. Please try again in a moment."
+          : mode === "sign-up"
+            ? "Could not create your account"
+            : "Could not sign you in";
+      setError(result.error.message || fallback);
       return;
     }
     router.push(next);
