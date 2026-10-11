@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Privacy First Weekly Planning Notebook - Product and Technical Plan</title>
+  <title>Weekly Planning Notebook - Product and Technical Plan</title>
   <style>
     :root {
       color-scheme: light;
@@ -396,28 +396,29 @@
   <header class="hero">
     <div class="shell">
       <p class="eyebrow">Product and technical plan</p>
-      <h1>Privacy First Weekly Planning Notebook</h1>
+      <h1>Weekly Planning Notebook</h1>
       <p class="hero-copy">
-        A web application that turns a paper weekly planning spread into a fast, private, encrypted planning workflow:
-        weekly direction, weekly todos, day assignment, daily notes, history, and Sunday reminders.
+        A web application that turns a paper weekly planning spread into a fast planning workflow:
+        weekly direction, weekly todos, day assignment, weekly notes, history, and a Sunday AI phone call
+        that turns a short conversation into next week's plan.
       </p>
 
       <div class="meta-grid" aria-label="Project summary">
         <div class="meta">
           <strong>Product Shape</strong>
-          <span>Weekly planner with notebook-like daily notes</span>
+          <span>Two-page weekly spread: days on the left, to-do list and notes on the right</span>
         </div>
         <div class="meta">
-          <strong>Privacy Model</strong>
-          <span>Client-side end-to-end encryption with vault passphrase and recovery key</span>
+          <strong>Signature Feature</strong>
+          <span>Sunday AI planning call that drafts next week automatically</span>
         </div>
         <div class="meta">
           <strong>Stack</strong>
-          <span>Angular, Angular Material, Tailwind, Express, PostgreSQL, TypeScript</span>
+          <span>Next.js App Router, TypeScript, Tailwind, shadcn/ui, Better Auth, Drizzle, PostgreSQL</span>
         </div>
         <div class="meta">
           <strong>Deployment</strong>
-          <span>Dockerized app hosted on Railway</span>
+          <span>Vercel with Neon PostgreSQL and Vercel Cron</span>
         </div>
       </div>
     </div>
@@ -428,10 +429,11 @@
       <a href="#north-star">North Star</a>
       <a href="#scope">Scope</a>
       <a href="#ux">UX Flow</a>
-      <a href="#privacy">Privacy</a>
+      <a href="#ai-call">AI Call</a>
       <a href="#architecture">Architecture</a>
       <a href="#data">Data</a>
       <a href="#api">API</a>
+      <a href="#privacy">Privacy</a>
       <a href="#deployment">Deployment</a>
       <a href="#roadmap">Roadmap</a>
       <a href="#risks">Risks</a>
@@ -443,7 +445,7 @@
       <div class="section-head">
         <div>
           <h2>North Star</h2>
-          <p>The app should feel like opening a private weekly notebook, not managing a generic productivity database.</p>
+          <p>The app should feel like opening a weekly notebook, not managing a generic productivity database.</p>
         </div>
       </div>
 
@@ -451,21 +453,22 @@
         <article class="card accent">
           <h3>Core Promise</h3>
           <p>
-            Help users set weekly direction, distribute work across days, and capture daily notes while keeping
-            private content unreadable to the service operator.
+            Help users set weekly direction, distribute work across days, and keep notes for the week, with a
+            Sunday call that turns a five-minute conversation into next week's plan.
           </p>
         </article>
         <article class="card success">
           <h3>Primary Differentiator</h3>
           <p>
-            The combination of weekly spread, task outcome tracking, daily notes, history, and true privacy gives
-            the product a specific identity.
+            A voice-first Sunday planning ritual on top of a weekly spread, task outcome tracking, weekly notes,
+            and history. Planning happens by talking, not typing.
           </p>
         </article>
         <article class="card warning">
           <h3>Design Constraint</h3>
           <p>
             The planner must be faster than paper for common actions. No heavy drawing editor in V1.
+            The AI drafts, the user stays in control: every call-created item is visible, editable, and undoable.
           </p>
         </article>
       </div>
@@ -475,7 +478,7 @@
       <div class="section-head">
         <div>
           <h2>Scope</h2>
-          <p>V1 focuses on planning and encrypted notes. Advanced visual note-taking is intentionally postponed.</p>
+          <p>V1 focuses on the planner and the Sunday AI call. Encryption and advanced visual note-taking are intentionally postponed.</p>
         </div>
       </div>
 
@@ -484,8 +487,6 @@
           <h3>V1 Includes</h3>
           <ul>
             <li>Social login and email/password login.</li>
-            <li>Vault passphrase unlock after authentication.</li>
-            <li>Recovery key generated during vault setup.</li>
             <li>Weekly plan with ISO week number and date range.</li>
             <li>Big picture direction for the week.</li>
             <li>Weekly todo list.</li>
@@ -493,19 +494,26 @@
             <li>Add ad hoc daily tasks.</li>
             <li>Mark tasks as completed or skipped.</li>
             <li>Skipped reason visible in the UI.</li>
-            <li>Simple daily notes.</li>
+            <li>One notes page per week: scrolls in place, saves while typing, full-screen mode.</li>
             <li>Calendar/history for previous weeks.</li>
-            <li>Sunday planning reminder by email, configurable after authentication without vault unlock.</li>
+            <li>Sunday AI planning call at a user-chosen day, time, and timezone.</li>
+            <li>Call result written automatically into next week: direction, tasks, day assignments, and notes.</li>
+            <li>Phone number verification, explicit call consent, and a "call me now" test call.</li>
+            <li>Email reminder as an alternative channel and as a fallback when a call is missed.</li>
+            <li>Call history with status, duration, and a short summary.</li>
           </ul>
         </article>
 
         <article class="card">
           <h3>V1 Excludes</h3>
           <ul>
+            <li>End-to-end encryption. Planned later as an optional mode; enabling it disables the AI call.</li>
+            <li>Inbound calls, mid-week check-in calls, and in-app voice planning.</li>
             <li>Free drawing.</li>
             <li>Boxes, arrows, dotted lines, and movable canvas objects.</li>
             <li>Native mobile apps.</li>
             <li>Complex rich-text editor features beyond basic formatting.</li>
+            <li>Analytics-heavy productivity scoring.</li>
           </ul>
         </article>
       </div>
@@ -516,8 +524,8 @@
         <div>
           <h2>UX Flow</h2>
           <p>
-            Authentication and vault unlock are separate steps. Notification settings require only
-            authentication; private planning content requires vault unlock.
+            Login leads straight to the current week. The Sunday call is set up once in settings and then
+            fills next week's plan without the user opening the app.
           </p>
         </div>
       </div>
@@ -527,24 +535,25 @@
 flowchart TD
   A[Open app] --> B{Authenticated?}
   B -- No --> C[Login with email/password or social provider]
-  B -- Yes --> S[Authenticated app shell]
-  C --> S
-  S --> Q[Sunday reminder settings]
-  S --> D{Vault unlocked?}
-  D -- No --> E[Enter vault passphrase]
-  E --> F{Passphrase works?}
-  F -- Yes --> G[Current week planner]
-  F -- No --> H[Use recovery key]
-  H --> I[Create new vault passphrase]
-  I --> G
-  D -- Yes --> G
+  C --> G
+  B -- Yes --> G[Current week planner]
   G --> J[Review big picture direction]
   G --> K[Create weekly todo list]
   K --> L[Assign tasks to days]
-  G --> M[Add daily notes and ad hoc tasks]
+  G --> M[Write weekly notes and ad hoc day tasks]
   M --> N[Mark tasks done or skipped]
   N --> O[Add skipped reason if needed]
   G --> P[Calendar and previous weeks]
+  G --> S[Planning settings]
+  S --> T[Verify phone number and consent to calls]
+  T --> U[Choose call day, time, and timezone]
+  U --> V[Optional test call]
+  V --> W[Sunday AI call]
+  W --> X{Answered?}
+  X -- Yes --> Y[Next week drafted automatically]
+  X -- No --> Z[One retry, then email reminder]
+  Z --> K
+  Y --> R[Review and edit next week in the app]
         </pre>
       </div>
 
@@ -552,8 +561,8 @@ flowchart TD
         <article class="card">
           <h3>Weekly Planning</h3>
           <p>
-            Sunday reminder brings the user to next week's planning view. The user sets direction,
-            creates weekly tasks, and assigns tasks to days.
+            On Sunday the AI calls, recaps unfinished work, and asks about next week. After the call, next week's
+            direction, tasks, and day assignments are already in the planner, marked as coming from the call.
           </p>
         </article>
         <article class="card">
@@ -573,201 +582,199 @@ flowchart TD
       </div>
     </section>
 
-    <section id="privacy">
+    <section id="ai-call">
       <div class="section-head">
         <div>
-          <h2>Privacy And Encryption</h2>
-          <p>Login proves identity. Vault passphrase or recovery key unlocks private content.</p>
+          <h2>Sunday AI Planning Call</h2>
+          <p>
+            At the user's chosen time, an AI calls, talks through next week in plain language, and writes the
+            result into the notebook. A managed voice platform runs the live call; the app owns scheduling,
+            context, extraction, and writing the plan.
+          </p>
         </div>
-      </div>
-
-      <div class="callout">
-        <strong>Non-negotiable rule:</strong>
-        the backend must never receive plaintext task titles, notes, weekly direction, skipped reasons,
-        the vault passphrase, the recovery key, or the decrypted vault key.
-      </div>
-
-      <div class="diagram">
-        <pre class="mermaid">
-flowchart LR
-  subgraph Browser[Browser]
-    P[Vault passphrase]
-    R[Recovery key]
-    KDF1[Argon2id KDF]
-    KDF2[Argon2id KDF]
-    WK1[Passphrase wrapping key]
-    WK2[Recovery wrapping key]
-    VK[Random vault key]
-    AES[AES-GCM encrypt/decrypt]
-    Plain[Plain notes and tasks in memory only]
-  end
-
-  subgraph Server[Express API]
-    API[Authenticated API]
-    Store[(PostgreSQL)]
-  end
-
-  P --> KDF1 --> WK1
-  R --> KDF2 --> WK2
-  WK1 -->|wraps| VK
-  WK2 -->|wraps| VK
-  Plain --> AES
-  VK --> AES
-  AES -->|ciphertext only| API --> Store
-  Store -->|ciphertext only| API --> AES
-        </pre>
-      </div>
-
-      <div class="grid two" style="margin-top: 14px;">
-        <article class="card">
-          <h3>Vault Setup</h3>
-          <ol>
-            <li>User authenticates with email/password or social login.</li>
-            <li>Browser asks user to create a vault passphrase.</li>
-            <li>Browser generates a random 256-bit vault key.</li>
-            <li>Browser derives a wrapping key from the passphrase using Argon2id.</li>
-            <li>Browser encrypts the vault key with that wrapping key.</li>
-            <li>Browser generates a random recovery key and displays it once.</li>
-            <li>Browser derives a second wrapping key from the recovery key using Argon2id.</li>
-            <li>Browser encrypts the same vault key with the recovery wrapping key.</li>
-            <li>Server stores encrypted vault key wrappings, salts, nonces, and KDF parameters.</li>
-          </ol>
-        </article>
-
-        <article class="card">
-          <h3>Forgot Passphrase</h3>
-          <ol>
-            <li>User logs in to the account.</li>
-            <li>User chooses recovery key flow.</li>
-            <li>Browser derives recovery wrapping key from the recovery key.</li>
-            <li>Browser decrypts the vault key.</li>
-            <li>User creates a new vault passphrase.</li>
-            <li>Browser re-wraps the vault key with the new passphrase.</li>
-            <li>Browser rotates the recovery key and shows a new one.</li>
-            <li>Old recovery wrapping is marked used or revoked.</li>
-          </ol>
-        </article>
       </div>
 
       <div class="diagram">
         <pre class="mermaid">
 sequenceDiagram
   autonumber
-  participant U as User
-  participant B as Browser
-  participant API as Express API
+  participant Cron as Vercel Cron
+  participant App as Next.js API
   participant DB as PostgreSQL
+  participant Voice as Voice agent platform
+  participant U as User phone
+  participant LLM as Claude API
 
-  U->>B: Enters recovery key
-  B->>API: Request recovery vault wrapping
-  API->>DB: Load encrypted recovery wrapping
-  DB-->>API: salt, nonce, encrypted vault key, params
-  API-->>B: Recovery wrapping
-  B->>B: Derive wrapping key with Argon2id
-  B->>B: Decrypt vault key locally
-  U->>B: Sets new vault passphrase
-  B->>B: Derive new wrapping key with Argon2id
-  B->>B: Re-encrypt vault key
-  B->>B: Generate and wrap new recovery key
-  B->>API: Save new encrypted wrappings
-  API->>DB: Revoke old wrappings and store new ones
-  B-->>U: Show new recovery key once
+  Cron->>App: Every 5 minutes, find due schedules
+  App->>DB: Claim due schedules and create call records
+  App->>DB: Load this week's direction and unfinished tasks
+  App->>Voice: Start outbound call with assistant config and context
+  Voice->>U: Phone rings
+  U-->>Voice: Describes next week in plain language
+  Voice->>U: Reads back a short summary
+  Voice-->>App: Signed end-of-call webhook with transcript and status
+  App->>DB: Store transcript, mark call ended
+  App->>LLM: Extract structured plan from transcript and context
+  LLM-->>App: Direction, tasks, day assignments, notes
+  App->>DB: Merge into next week and mark call processed
+  App->>U: Email that next week's plan is ready, no plan content
         </pre>
       </div>
 
-      <table style="margin-top: 14px;">
-        <thead>
-          <tr>
-            <th>Item</th>
-            <th>Where It Exists</th>
-            <th>Stored On Server?</th>
-            <th>Notes</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Login password</td>
-            <td>User input, server password hash flow</td>
-            <td>Only a password hash</td>
-            <td>Use Argon2id server-side for local account passwords.</td>
-          </tr>
-          <tr>
-            <td>Vault passphrase</td>
-            <td>Browser input only</td>
-            <td>No</td>
-            <td>Used to derive a key that unwraps the vault key.</td>
-          </tr>
-          <tr>
-            <td>Recovery key</td>
-            <td>Shown to user once, browser input during recovery</td>
-            <td>No</td>
-            <td>Randomly generated, high entropy, rotated after use.</td>
-          </tr>
-          <tr>
-            <td>Vault key</td>
-            <td>Browser memory after unlock</td>
-            <td>Encrypted only</td>
-            <td>Encrypts private planner data with AES-GCM.</td>
-          </tr>
-          <tr>
-            <td>Tasks and notes</td>
-            <td>Browser memory after decrypt</td>
-            <td>Ciphertext only</td>
-            <td>Includes direction, task titles, notes, and skipped reasons.</td>
-          </tr>
-        </tbody>
-      </table>
+      <div class="grid three" style="margin-top: 14px;">
+        <article class="card accent">
+          <h3>Conversation Outline</h3>
+          <ol>
+            <li>Greet by name, say it is an AI assistant, confirm it is a good time.</li>
+            <li>Recap unfinished and skipped tasks from this week and ask what carries over.</li>
+            <li>Ask for the big picture direction for next week.</li>
+            <li>Collect tasks in free form; ask for a day only when it matters.</li>
+            <li>Ask for anything else to remember, such as appointments or notes.</li>
+            <li>Read back a short summary and accept corrections.</li>
+            <li>Say the plan will be waiting in the app and end the call.</li>
+          </ol>
+          <p class="muted" style="margin-top: 10px;">Target 3 to 7 minutes, hard limit 10 minutes.</p>
+        </article>
+
+        <article class="card accent">
+          <h3>Plan Extraction</h3>
+          <p>
+            After the call, the backend sends the transcript plus this week's context to Claude
+            (<code>claude-opus-5-5</code>) through the Anthropic TypeScript SDK with structured outputs, using a
+            Zod schema:
+          </p>
+          <ul>
+            <li><code>bigPictureDirection</code></li>
+            <li><code>tasks[]</code> with <code>title</code>, optional <code>day</code>, optional <code>carriedOverFromTaskId</code></li>
+            <li><code>dayItems[]</code> with <code>day</code> and <code>text</code>, added as tasks on that day</li>
+            <li><code>weekNotes</code>, appended to the week's notes</li>
+            <li><code>callSummary</code></li>
+          </ul>
+          <p style="margin-top: 10px;">
+            Day names resolve to dates in the target week: the ISO week that starts on the Monday after the call.
+          </p>
+        </article>
+
+        <article class="card accent">
+          <h3>Applying The Plan</h3>
+          <ul>
+            <li>Validate the extraction with Zod before writing anything.</li>
+            <li>Append only. Never overwrite or delete user-entered items.</li>
+            <li>Fill direction only if next week's direction is empty; otherwise add the call's version as a note.</li>
+            <li>Tag every created task with <code>call_id</code> and show a "Drafted from your Sunday call" banner.</li>
+            <li>One-click undo removes everything that call created.</li>
+            <li>Processing is idempotent per call, so webhook retries cannot duplicate tasks.</li>
+          </ul>
+        </article>
+      </div>
+
+      <div class="grid three" style="margin-top: 14px;">
+        <article class="card">
+          <h3>Call Lifecycle</h3>
+          <p>
+            Status moves through <code>queued</code>, <code>ringing</code>, <code>in_progress</code>,
+            <code>ended</code>, <code>processed</code>, with <code>no_answer</code> and <code>failed</code> as
+            exits.
+          </p>
+          <ul>
+            <li>No answer or voicemail: hang up, retry once after 15 minutes.</li>
+            <li>Second miss: send the email reminder if email fallback is on.</li>
+            <li>Ended but not processed: the next cron run retries extraction.</li>
+            <li>Respect quiet hours and a per-user monthly call cap.</li>
+          </ul>
+        </article>
+
+        <article class="card">
+          <h3>Consent And Compliance</h3>
+          <ul>
+            <li>Phone verified by SMS one-time code before any call.</li>
+            <li>Explicit opt-in with stored timestamp and consent text version.</li>
+            <li>The AI discloses that it is an AI at the start of every call.</li>
+            <li>"Stop calling me" on the call or in settings disables calls immediately.</li>
+            <li>Only call verified numbers, in an allowlist of countries.</li>
+            <li>Rules for automated calls differ by country, such as TCPA in the US and GDPR in the EU; review before launch.</li>
+          </ul>
+        </article>
+
+        <article class="card warning">
+          <h3>Cost</h3>
+          <p>
+            Managed voice platforms land around $0.10 to $0.30 per minute all-in, including speech, voice, model,
+            and telephony. A 5-minute weekly call is roughly $2 to $6 per user per month, more for non-US numbers.
+          </p>
+          <p class="muted">
+            Calls need a paid plan or a limited free allowance. Store cost per call to track margins.
+          </p>
+        </article>
+      </div>
     </section>
 
     <section id="architecture">
       <div class="section-head">
         <div>
           <h2>Application Architecture</h2>
-          <p>Use a modular monolith so the system is simple to deploy but still has clear internal ownership.</p>
+          <p>
+            One Next.js app as a modular monolith. Pages and route handlers stay thin; business logic lives in
+            server-only modules with services and repositories.
+          </p>
         </div>
       </div>
 
       <div class="diagram">
         <pre class="mermaid">
 flowchart TB
-  subgraph FE[Angular Frontend]
-    UI[Angular Material UI]
-    TW[Tailwind layout]
-    Crypto[Client crypto service]
-    Planner[Planner state and forms]
+  subgraph Browser[Browser]
+    UI["shadcn/ui and Tailwind components"]
+    State["Planner client state with optimistic updates"]
   end
 
-  subgraph BE[Express TypeScript Modular Monolith]
-    Auth[auth module]
-    Users[users module]
-    Vault[vault module]
-    Weeks[weeks module]
-    Tasks[tasks module]
-    Notes[notes module]
-    Notifications[notifications module]
-    CryptoMeta[crypto metadata module]
-    Common[common validation and errors]
+  subgraph App[Next.js on Vercel]
+    Pages["App Router pages, Server Components"]
+    API["REST route handlers, api v1"]
+    AuthH["Better Auth handler"]
+    Hook["Voice webhook handler"]
+    CronH["Cron handler"]
+    subgraph Modules[Server modules]
+      Planner[planner]
+      Schedules[schedules]
+      Calls[calls]
+      Extract[extraction]
+      Notify[notifications]
+      Users[users]
+    end
   end
 
-  subgraph Infra[Infrastructure]
-    PG[(PostgreSQL)]
-    Worker[Reminder worker]
-    Mail[Email provider]
+  subgraph Ext[External services]
+    PG[(Neon PostgreSQL)]
+    Voice[Voice agent platform]
+    Claude[Claude API]
+    Mail[Resend email]
+    Verify[Twilio Verify SMS]
   end
 
-  UI --> Planner
-  Planner --> Crypto
-  Crypto -->|ciphertext payloads| Auth
-  Crypto -->|ciphertext payloads| Vault
-  Crypto -->|ciphertext payloads| Weeks
-  Auth --> Users
-  Vault --> PG
-  Weeks --> PG
-  Tasks --> PG
-  Notes --> PG
-  Notifications --> PG
-  Worker --> Notifications
-  Worker --> Mail
+  UI --> State --> API
+  Pages --> Planner
+  API --> Planner
+  API --> Schedules
+  API --> Users
+  API --> Calls
+  AuthH --> PG
+  CronH --> Schedules
+  Schedules --> Calls
+  Schedules --> Notify
+  Calls --> Voice
+  Voice -->|call events| Hook
+  Hook --> Calls
+  Calls --> Extract
+  Extract --> Claude
+  Extract --> Planner
+  Calls --> Notify
+  Notify --> Mail
+  Users --> Verify
+  Planner --> PG
+  Schedules --> PG
+  Calls --> PG
+  Users --> PG
         </pre>
       </div>
 
@@ -775,43 +782,46 @@ flowchart TB
         <article class="card">
           <h3>Frontend</h3>
           <p>
-            Angular with Angular Material for accessible controls and Tailwind for layout.
-            The frontend owns encryption, decryption, unlock state, and plaintext rendering.
+            App Router pages render the initial week on the server. The interactive planner is a client component
+            using TanStack Query against the REST API, with optimistic updates so quick entry feels instant.
           </p>
           <p>
-            <span class="pill">Angular</span>
-            <span class="pill">Angular Material</span>
+            <span class="pill">Next.js App Router</span>
+            <span class="pill">React</span>
+            <span class="pill">shadcn/ui</span>
             <span class="pill">Tailwind</span>
-            <span class="pill">Argon2id WASM</span>
-            <span class="pill">Web Crypto</span>
+            <span class="pill">TanStack Query</span>
           </p>
         </article>
 
         <article class="card">
           <h3>Backend</h3>
           <p>
-            Express with TypeScript and Passport.js. Modules expose routes but keep business logic
-            in services and database access in repositories.
+            Route handlers under <code>/api/v1</code> validate input with Zod and call modules in
+            <code>src/server/modules/*</code>. Modules import <code>server-only</code> so they never ship to
+            the browser. Better Auth owns <code>/api/auth/*</code>.
           </p>
           <p>
-            <span class="pill">Express</span>
-            <span class="pill">Passport.js</span>
+            <span class="pill">Route Handlers</span>
+            <span class="pill">Better Auth</span>
             <span class="pill">TypeScript</span>
             <span class="pill">Zod</span>
-            <span class="pill">Prisma or Drizzle</span>
+            <span class="pill">Drizzle</span>
           </p>
         </article>
 
         <article class="card">
-          <h3>Database</h3>
+          <h3>Integrations</h3>
           <p>
-            PostgreSQL stores identity data, encrypted vault wrappings, encrypted planner records,
-            notification preferences, and operational metadata.
+            The voice platform sits behind a thin adapter so it can be swapped. Claude handles post-call
+            extraction. Resend sends email, Twilio Verify sends SMS codes, Vercel Cron drives scheduling.
           </p>
           <p>
-            <span class="pill">PostgreSQL</span>
-            <span class="pill">Migrations</span>
-            <span class="pill">Encrypted blobs</span>
+            <span class="pill">Voice platform</span>
+            <span class="pill">Anthropic SDK</span>
+            <span class="pill">Resend</span>
+            <span class="pill">Twilio Verify</span>
+            <span class="pill">Vercel Cron</span>
           </p>
         </article>
       </div>
@@ -821,121 +831,164 @@ flowchart TB
       <div class="section-head">
         <div>
           <h2>Data Model</h2>
-          <p>The model separates account identity from encrypted vault data.</p>
+          <p>
+            Planner content is stored as normal rows, so the call pipeline can read context, write tasks,
+            and update one item without rewriting a whole week.
+          </p>
         </div>
       </div>
 
       <div class="diagram">
         <pre class="mermaid">
 erDiagram
-  USERS ||--o{ AUTH_IDENTITIES : has
-  USERS ||--|| VAULTS : owns
-  VAULTS ||--o{ VAULT_KEY_WRAPPINGS : has
-  VAULTS ||--o{ ENCRYPTED_WEEK_RECORDS : contains
-  USERS ||--o{ NOTIFICATION_SETTINGS : has
+  USERS ||--o{ ACCOUNTS : "signs in with"
   USERS ||--o{ SESSIONS : has
+  USERS ||--o{ WEEKS : plans
+  WEEKS ||--o{ TASKS : contains
+  USERS ||--o| PLANNING_SCHEDULES : configures
+  USERS ||--o{ CALLS : receives
+  USERS ||--o{ PHONE_VERIFICATIONS : verifies
+  CALLS |o--o{ TASKS : creates
 
   USERS {
     uuid id PK
     string email
-    string display_name
+    string name
+    string timezone "IANA, e.g. Europe/Vilnius"
+    string phone_e164
+    timestamptz phone_verified_at
     timestamptz created_at
     timestamptz updated_at
   }
 
-  AUTH_IDENTITIES {
+  ACCOUNTS {
     uuid id PK
     uuid user_id FK
-    string provider
-    string provider_subject
-    string password_hash
+    string provider_id "credential, google, apple"
+    string account_id
+    string password_hash "credential accounts only"
     timestamptz created_at
-  }
-
-  VAULTS {
-    uuid id PK
-    uuid user_id FK
-    int crypto_version
-    bool passphrase_reset_required
-    timestamptz created_at
-  }
-
-  VAULT_KEY_WRAPPINGS {
-    uuid id PK
-    uuid vault_id FK
-    string type
-    string kdf
-    jsonb kdf_params
-    bytea salt
-    bytea nonce
-    bytea encrypted_vault_key
-    timestamptz created_at
-    timestamptz revoked_at
-    timestamptz used_at
-  }
-
-  ENCRYPTED_WEEK_RECORDS {
-    uuid id PK
-    uuid vault_id FK
-    date week_start_date
-    int iso_week
-    int year
-    bytea nonce
-    bytea ciphertext
-    bytea aad_tag
-    timestamptz created_at
-    timestamptz updated_at
-  }
-
-  NOTIFICATION_SETTINGS {
-    uuid id PK
-    uuid user_id FK
-    string channel
-    string timezone
-    string schedule
-    bool enabled
   }
 
   SESSIONS {
     uuid id PK
     uuid user_id FK
-    string refresh_token_hash
+    string token
     timestamptz expires_at
+    string user_agent
+  }
+
+  WEEKS {
+    uuid id PK
+    uuid user_id FK
+    int iso_year "ISO week-year"
+    int iso_week
+    date week_start_date "Monday"
+    text big_picture_direction
+    int version
+    text notes
+    int notes_version
+    timestamptz created_at
+    timestamptz updated_at
+  }
+
+  TASKS {
+    uuid id PK
+    uuid week_id FK
+    uuid call_id FK "set when created by a call"
+    uuid carried_over_from_task_id FK
+    string title
+    string kind "weekly or ad_hoc"
+    date assigned_date "null means weekly list"
+    string status "open, done, skipped"
+    text skipped_reason
+    int position
+    int version
+    timestamptz completed_at
+    timestamptz updated_at
+  }
+
+  PLANNING_SCHEDULES {
+    uuid id PK
+    uuid user_id FK
+    bool enabled
+    string channel "call or email"
+    int day_of_week "ISO day, 7 is Sunday"
+    string local_time "HH:MM"
+    string timezone "IANA"
+    timestamptz next_run_at "UTC, indexed"
+    timestamptz last_run_at
+    bool email_fallback
+    timestamptz call_consent_at
+    string call_consent_version
+  }
+
+  PHONE_VERIFICATIONS {
+    uuid id PK
+    uuid user_id FK
+    string phone_e164
+    string status "pending, approved, expired"
+    int attempts
+    timestamptz expires_at
+  }
+
+  CALLS {
+    uuid id PK
+    uuid user_id FK
+    int target_iso_year
+    int target_iso_week
+    string provider
+    string provider_call_id
+    string status "queued to processed"
+    string trigger "schedule, manual, retry"
+    int attempt
+    timestamptz next_attempt_at
+    timestamptz started_at
+    timestamptz ended_at
+    int duration_seconds
+    text transcript "deleted after retention window"
+    timestamptz transcript_expires_at
+    jsonb extracted_plan
+    jsonb import_result "what was added, for undo"
+    text summary
+    int cost_cents
+    int processing_attempts
+    timestamptz processing_lease_until
+    text error
   }
         </pre>
       </div>
 
-      <div class="grid two" style="margin-top: 14px;">
+      <div class="grid three" style="margin-top: 14px;">
         <article class="card">
-          <h3>Encrypted Week Payload</h3>
-          <p>
-            Store the user's actual planner content inside one encrypted payload per week for V1.
-            This keeps privacy simple and avoids leaking task counts or note lengths at a fine-grained level.
-          </p>
+          <h3>Constraints And Concurrency</h3>
           <ul>
-            <li><code>bigPictureDirection</code></li>
-            <li><code>weeklyTasks</code></li>
-            <li><code>dailyPlans</code></li>
-            <li><code>dailyTasks</code></li>
-            <li><code>dailyNotes</code></li>
-            <li><code>taskStatuses</code></li>
-            <li><code>skippedReasons</code></li>
+            <li>Unique <code>weeks(user_id, iso_year, iso_week)</code>.</li>
+            <li>Direction and notes have separate versions, so editing one never conflicts with the other.</li>
+            <li>Unique <code>planning_schedules(user_id)</code> and <code>calls(provider_call_id)</code>.</li>
+            <li>Partial index on <code>planning_schedules(next_run_at)</code> where enabled.</li>
+            <li>A <code>version</code> column plus <code>If-Match</code> on updates detects edits from two tabs or devices.</li>
           </ul>
         </article>
 
         <article class="card">
-          <h3>Plain Metadata</h3>
-          <p>
-            Keep metadata minimal. Plain week dates enable fast lookup and reminders, but they reveal usage patterns.
-            If maximum privacy becomes a requirement, move more metadata into encrypted payloads later.
-          </p>
+          <h3>Week And Time Rules</h3>
           <ul>
-            <li>User id and login identities.</li>
-            <li>Vault id and crypto version.</li>
-            <li>Week start date, ISO week, and year.</li>
-            <li>Account-level notification schedule and timezone.</li>
-            <li>Creation/update timestamps.</li>
+            <li>Weeks are Monday-start ISO weeks.</li>
+            <li><code>iso_year</code> is the ISO week-year: Dec 29 2025 belongs to 2026-W01.</li>
+            <li>Schedules store local day, local time, and IANA timezone.</li>
+            <li><code>next_run_at</code> is recomputed after each run and whenever timezone or schedule changes, which also handles daylight saving time.</li>
+            <li>Weeks are created lazily on first write.</li>
           </ul>
+        </article>
+
+        <article class="card">
+          <h3>Ready For Optional Encryption</h3>
+          <p>
+            Keep content fields (<code>title</code>, <code>body</code>, <code>big_picture_direction</code>,
+            <code>skipped_reason</code>) behind the <code>planner</code> module only. A later encrypted mode can then
+            swap them for ciphertext per user without touching schedules, calls, or auth.
+          </p>
         </article>
       </div>
     </section>
@@ -945,9 +998,8 @@ erDiagram
         <div>
           <h2>API Surface</h2>
           <p>
-            Backend endpoints move ciphertext and metadata. They do not understand private content.
             Routes use RESTful nouns: the HTTP method decides the action, the path identifies the resource,
-            and route paths avoid verbs.
+            and route paths avoid verbs. The user always comes from the session; user ids never appear in paths.
           </p>
         </div>
       </div>
@@ -963,38 +1015,151 @@ erDiagram
         <tbody>
           <tr>
             <td><code>auth</code></td>
-            <td><code>POST /sessions</code>, <code>GET /sessions</code>, <code>DELETE /sessions/:sessionId</code>, <code>GET /oauth/providers/:provider/authorizations</code></td>
-            <td>Account authentication through local credentials and social providers.</td>
-          </tr>
-          <tr>
-            <td><code>vault</code></td>
-            <td><code>POST /vaults</code>, <code>GET /vaults/:vaultId/key-wrappings</code>, <code>GET /vaults/:vaultId/key-wrappings/:keyWrappingId</code>, <code>PUT /vaults/:vaultId/key-wrappings/:keyWrappingId</code></td>
-            <td>Store encrypted vault key wrappings and recovery state.</td>
-          </tr>
-          <tr>
-            <td><code>weeks</code></td>
-            <td><code>GET /years/:year/weeks</code>, <code>GET /years/:year/weeks/:isoWeek</code>, <code>PUT /years/:year/weeks/:isoWeek</code></td>
-            <td>Read and write encrypted weekly planner records.</td>
-          </tr>
-          <tr>
-            <td><code>notifications</code></td>
-            <td><code>GET /users/:userId/notification-settings</code>, <code>PUT /users/:userId/notification-settings</code></td>
-            <td>Manage Sunday reminder settings and email delivery preferences after authentication, without requiring vault unlock.</td>
+            <td><code>/api/auth/*</code></td>
+            <td>Email/password and social sign-in, sessions, and sign-out. Routes are owned by Better Auth.</td>
           </tr>
           <tr>
             <td><code>users</code></td>
-            <td><code>POST /users</code>, <code>GET /users/:userId</code>, <code>PATCH /users/:userId</code>, <code>DELETE /users/:userId</code></td>
-            <td>Create accounts, manage profiles, and handle account lifecycle.</td>
+            <td><code>GET /api/v1/me</code>, <code>PATCH /api/v1/me</code>, <code>DELETE /api/v1/me</code></td>
+            <td>Profile, timezone, and account deletion.</td>
+          </tr>
+          <tr>
+            <td><code>weeks</code></td>
+            <td><code>GET /api/v1/years/:isoYear/weeks</code>, <code>GET /api/v1/years/:isoYear/weeks/:isoWeek</code>, <code>PUT /api/v1/years/:isoYear/weeks/:isoWeek</code></td>
+            <td>List weeks for history, read one week with its tasks and notes, set the big picture direction.</td>
+          </tr>
+          <tr>
+            <td><code>tasks</code></td>
+            <td><code>POST /api/v1/years/:isoYear/weeks/:isoWeek/tasks</code>, <code>PATCH /api/v1/tasks/:taskId</code>, <code>DELETE /api/v1/tasks/:taskId</code></td>
+            <td>Create tasks, assign them to days, reorder, and mark done or skipped with a reason.</td>
+          </tr>
+          <tr>
+            <td><code>notes</code></td>
+            <td><code>PUT /api/v1/years/:isoYear/weeks/:isoWeek/notes</code></td>
+            <td>Replace the week's notes. <code>If-Match</code> carries the notes version.</td>
+          </tr>
+          <tr>
+            <td><code>planning-schedule</code></td>
+            <td><code>GET /api/v1/me/planning-schedule</code>, <code>PUT /api/v1/me/planning-schedule</code></td>
+            <td>Channel, day, time, timezone, enabled state, email fallback, and call consent.</td>
+          </tr>
+          <tr>
+            <td><code>phone-verifications</code></td>
+            <td><code>POST /api/v1/me/phone-verifications</code>, <code>PATCH /api/v1/me/phone-verifications/:verificationId</code></td>
+            <td>Send an SMS code, then submit the code to verify the number. Rate limited.</td>
+          </tr>
+          <tr>
+            <td><code>calls</code></td>
+            <td><code>GET /api/v1/calls</code>, <code>GET /api/v1/calls/:callId</code>, <code>POST /api/v1/calls</code>, <code>DELETE /api/v1/calls/:callId/plan-import</code></td>
+            <td>Call history and summaries, start a test call now, and undo everything a call added.</td>
+          </tr>
+          <tr>
+            <td><code>webhooks</code></td>
+            <td><code>POST /api/webhooks/voice</code></td>
+            <td>Signature-verified call events from the voice platform. Stores the event and returns quickly.</td>
+          </tr>
+          <tr>
+            <td><code>cron</code></td>
+            <td><code>GET /api/cron/planning-runs</code></td>
+            <td>Internal only, protected by <code>CRON_SECRET</code>. Vercel Cron always calls with GET.</td>
           </tr>
         </tbody>
       </table>
+    </section>
+
+    <section id="privacy">
+      <div class="section-head">
+        <div>
+          <h2>Privacy And Data Handling</h2>
+          <p>
+            Planner content is readable by the server in V1 so the AI call can use it. Privacy comes from
+            minimization, access control, short retention, and clear disclosure.
+          </p>
+        </div>
+      </div>
+
+      <div class="callout">
+        <strong>V1 rule:</strong>
+        planner content never appears in emails, SMS, logs, error reports, or analytics. Only the user, the call
+        pipeline, and audited production access can read it.
+      </div>
+
+      <table style="margin-top: 14px;">
+        <thead>
+          <tr>
+            <th>Data</th>
+            <th>Where It Goes</th>
+            <th>Retention</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Login password</td>
+            <td>Better Auth</td>
+            <td>Hash only</td>
+            <td>Plain passwords are never stored or logged.</td>
+          </tr>
+          <tr>
+            <td>Planner content</td>
+            <td>Neon PostgreSQL, encrypted at rest by the provider</td>
+            <td>Until the user deletes it or the account</td>
+            <td>Direction, tasks, notes, and skipped reasons.</td>
+          </tr>
+          <tr>
+            <td>Call context</td>
+            <td>Voice platform and Claude, per call</td>
+            <td>Per call only</td>
+            <td>First name, this week's direction, and unfinished task titles. Nothing older.</td>
+          </tr>
+          <tr>
+            <td>Phone number</td>
+            <td>PostgreSQL, voice platform, Twilio Verify</td>
+            <td>Until removed by the user</td>
+            <td>Stored in E.164 format, verified before use.</td>
+          </tr>
+          <tr>
+            <td>Call audio</td>
+            <td>Not recorded</td>
+            <td>None</td>
+            <td>Recording is turned off on the voice platform.</td>
+          </tr>
+          <tr>
+            <td>Transcript</td>
+            <td>Voice platform, then our database and Claude</td>
+            <td>30 days in our database, deleted at the provider after processing</td>
+            <td>Lets the user see what the AI heard and helps debug extraction.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="grid two" style="margin-top: 14px;">
+        <article class="card">
+          <h3>Sub-processors</h3>
+          <p>
+            Vercel, Neon, the voice platform and its telephony carrier, Anthropic, Twilio, and Resend. List them in
+            the privacy policy, sign data processing agreements, prefer EU regions where offered, and use each
+            provider's lowest data retention settings.
+          </p>
+        </article>
+
+        <article class="card success">
+          <h3>Later: Optional End-to-End Encryption</h3>
+          <p>
+            A user can turn on an encrypted mode: vault passphrase, recovery key, and client-side AES-GCM.
+            The server can then no longer read or write planner content, so enabling it turns off the AI call
+            for that user, encrypts existing weeks in the browser, and deletes stored transcripts.
+            Schedules and email reminders keep working.
+          </p>
+        </article>
+      </div>
     </section>
 
     <section id="deployment">
       <div class="section-head">
         <div>
           <h2>Deployment</h2>
-          <p>Start with a Dockerized deployment on Railway, with PostgreSQL managed by Railway.</p>
+          <p>Deploy the Next.js app on Vercel with Neon PostgreSQL from the Vercel Marketplace and Vercel Cron for scheduling.</p>
         </div>
       </div>
 
@@ -1002,39 +1167,58 @@ erDiagram
         <pre class="mermaid">
 flowchart LR
   Dev[Developer machine] --> Git[GitHub repository]
-  Git --> Railway[Railway build and deploy]
-  Railway --> Web[Docker container: Angular static assets + Express API]
-  Railway --> Worker[Docker worker: reminders]
-  Web --> PG[(Railway PostgreSQL)]
-  Worker --> PG
-  Worker --> Email[Email provider]
-  Domain[Custom domain] --> DNS[DNS provider]
-  DNS --> Railway
-  User[User browser] --> Domain
+  Git --> Vercel[Vercel build: preview per PR, production on main]
+  Vercel --> App[Next.js app: pages and route handlers]
+  Vercel --> Cron[Vercel Cron every 5 minutes]
+  Cron --> App
+  App --> PG[(Neon PostgreSQL)]
+  App --> Voice[Voice agent platform]
+  Voice --> Phone[User phone]
+  Voice -->|webhooks| App
+  App --> Claude[Claude API]
+  App --> Email[Resend]
+  App --> SMS[Twilio Verify]
+  User[User browser] --> Domain[Custom domain on Vercel]
+  Domain --> App
         </pre>
       </div>
 
-      <div class="grid two" style="margin-top: 14px;">
+      <div class="grid three" style="margin-top: 14px;">
         <article class="card">
-          <h3>Docker Shape</h3>
+          <h3>Vercel Setup</h3>
           <ul>
-            <li>Multi-stage Dockerfile.</li>
-            <li>Build Angular app into static assets.</li>
-            <li>Compile Express TypeScript backend.</li>
-            <li>Serve Angular assets and API from the same container for V1 simplicity.</li>
-            <li>Run migrations during release phase or controlled deployment command.</li>
+            <li>Pro plan: Hobby cron runs only once a day with up to 59 minutes of delay.</li>
+            <li>Fluid compute; raise <code>maxDuration</code> on webhook and extraction routes.</li>
+            <li>Pin the function region next to the Neon database region.</li>
+            <li>Preview deployments use Neon branch databases.</li>
+            <li>Run Drizzle migrations in CI before promoting to production.</li>
+            <li>Live call audio stays on the voice platform, not on Vercel functions.</li>
           </ul>
+        </article>
+
+        <article class="card">
+          <h3>Cron Run</h3>
+          <ol>
+            <li>Claim due schedules with one <code>UPDATE ... RETURNING</code> so overlapping runs cannot double-dial.</li>
+            <li>Start calls or send email reminders.</li>
+            <li>Retry unanswered calls once.</li>
+            <li>Re-run extraction for calls that ended but were not processed.</li>
+            <li>Delete expired transcripts.</li>
+          </ol>
         </article>
 
         <article class="card">
           <h3>Runtime Requirements</h3>
           <ul>
             <li><code>DATABASE_URL</code></li>
-            <li><code>SESSION_SECRET</code></li>
+            <li><code>BETTER_AUTH_SECRET</code>, <code>BETTER_AUTH_URL</code></li>
             <li>OAuth client ids and secrets.</li>
-            <li>Email provider API key.</li>
-            <li>Frontend public app URL.</li>
-            <li>Strict HTTPS and secure cookies in production.</li>
+            <li><code>ANTHROPIC_API_KEY</code></li>
+            <li>Voice platform API key, phone number id, and webhook secret.</li>
+            <li>Twilio Verify credentials.</li>
+            <li><code>RESEND_API_KEY</code></li>
+            <li><code>CRON_SECRET</code></li>
+            <li><code>NEXT_PUBLIC_APP_URL</code></li>
           </ul>
         </article>
       </div>
@@ -1044,7 +1228,7 @@ flowchart LR
       <div class="section-head">
         <div>
           <h2>Roadmap</h2>
-          <p>Build privacy and core planning first, then expand editing power only after the planner is useful.</p>
+          <p>Build the planner first, then the call on top of it, so the call always has somewhere useful to write.</p>
         </div>
       </div>
 
@@ -1053,8 +1237,8 @@ flowchart LR
           <div>
             <h3>Foundation</h3>
             <p class="muted">
-              Repository setup, TypeScript configs, Angular shell, Express shell, PostgreSQL connection,
-              Dockerfile, health check, and CI.
+              Next.js App Router project with strict TypeScript, Tailwind, shadcn/ui, Drizzle with Neon,
+              Vercel project with preview deployments, CI for lint, typecheck, and tests, and a health check.
             </p>
           </div>
         </article>
@@ -1063,18 +1247,8 @@ flowchart LR
           <div>
             <h3>Authentication</h3>
             <p class="muted">
-              Email/password login, social login, Passport.js strategies, session or token handling,
-              account profile, and protected API routes.
-            </p>
-          </div>
-        </article>
-
-        <article class="phase">
-          <div>
-            <h3>Vault Encryption</h3>
-            <p class="muted">
-              Vault setup, Argon2id derivation, AES-GCM encryption, passphrase unlock, recovery key setup,
-              recovery flow, and passphrase rotation.
+              Better Auth with email/password and social login, database sessions in secure HTTP-only cookies,
+              protected routes, profile, and timezone.
             </p>
           </div>
         </article>
@@ -1084,17 +1258,28 @@ flowchart LR
             <h3>Planner MVP</h3>
             <p class="muted">
               Current week view, ISO week notation, weekly direction, weekly todos, daily assignment,
-              ad hoc daily tasks, notes, task completion, skipped reasons, and persistence.
+              ad hoc daily tasks, notes, task completion, skipped reasons, and optimistic updates.
             </p>
           </div>
         </article>
 
         <article class="phase">
           <div>
-            <h3>Calendar And Reminders</h3>
+            <h3>Calendar And Email Reminders</h3>
             <p class="muted">
-              Previous week navigation, calendar history, Sunday reminders, timezone handling,
-              and email delivery.
+              Previous week navigation, calendar history, planning schedule with timezone handling,
+              Vercel Cron, and email reminders through Resend.
+            </p>
+          </div>
+        </article>
+
+        <article class="phase">
+          <div>
+            <h3>Sunday AI Call</h3>
+            <p class="muted">
+              Phone verification, consent, voice platform adapter, conversation script, signed webhooks,
+              Claude extraction, merge into next week, undo, retries and email fallback, call history,
+              cost tracking, and the test call.
             </p>
           </div>
         </article>
@@ -1103,8 +1288,18 @@ flowchart LR
           <div>
             <h3>Polish And Launch</h3>
             <p class="muted">
-              Responsive layout, accessibility checks, onboarding copy, recovery-key warnings,
-              privacy policy, deployment hardening, backups, logs, and beta launch.
+              Responsive layout, accessibility checks, onboarding with a first test call, privacy policy with
+              sub-processors, rate limits, backups through Neon point-in-time restore, error monitoring, and beta launch.
+            </p>
+          </div>
+        </article>
+
+        <article class="phase">
+          <div>
+            <h3>Later</h3>
+            <p class="muted">
+              Optional end-to-end encryption mode that disables the AI call, in-app voice planning,
+              mid-week check-in calls, and native mobile apps.
             </p>
           </div>
         </article>
@@ -1115,7 +1310,7 @@ flowchart LR
       <div class="section-head">
         <div>
           <h2>Risks And Decisions</h2>
-          <p>The hard parts are privacy UX, metadata leakage, and keeping the planner fast.</p>
+          <p>The hard parts are call quality, call cost, consent, and keeping the planner fast.</p>
         </div>
       </div>
 
@@ -1123,11 +1318,14 @@ flowchart LR
         <article class="card risk">
           <h3>Key Risks</h3>
           <ul>
-            <li>Users losing both passphrase and recovery key means old data cannot be recovered.</li>
-            <li>Client-side encryption makes search, analytics, and server-side processing much harder.</li>
-            <li>Plain metadata can still reveal usage patterns.</li>
-            <li>Argon2id in browser requires a vetted WASM implementation and careful performance tuning.</li>
-            <li>Sunday reminders must avoid exposing private content in email.</li>
+            <li>The AI mishears or misplaces tasks. Mitigate with a read-back on the call, tagged items, and one-click undo.</li>
+            <li>Call cost scales per user. Needs pricing, a free allowance, and per-user caps.</li>
+            <li>Users miss Sunday calls. One retry, then an email reminder.</li>
+            <li>Automated AI calls need explicit consent, AI disclosure, and easy opt-out, with rules that differ by country.</li>
+            <li>SMS and call toll fraud through phone verification. Rate limit and restrict countries.</li>
+            <li>Planner content is readable server-side in V1. Disclose it and keep it out of logs and emails.</li>
+            <li>Dependence on one voice platform. Keep it behind a thin adapter.</li>
+            <li>Timezone and daylight saving bugs can call users at the wrong time.</li>
             <li>Too much rich text or drawing scope can delay the planner MVP.</li>
           </ul>
         </article>
@@ -1135,14 +1333,18 @@ flowchart LR
         <article class="card success">
           <h3>Decisions Locked For V1</h3>
           <ul>
-            <li>Use Angular Material, not React MUI.</li>
-            <li>Use simple text notes in V1.</li>
-            <li>Use client-side E2EE for private planner content.</li>
-            <li>Require a vault passphrase for all users, including social login users.</li>
-            <li>Keep notification settings account-level, requiring authentication but not vault unlock.</li>
-            <li>Generate a recovery key during setup.</li>
-            <li>Use a modular monolith backend.</li>
-            <li>Dockerize and deploy to Railway.</li>
+            <li>Next.js App Router with TypeScript, deployed on Vercel.</li>
+            <li>shadcn/ui and Tailwind for the UI.</li>
+            <li>Better Auth with database sessions in secure HTTP-only cookies.</li>
+            <li>Drizzle ORM on Neon PostgreSQL.</li>
+            <li>Normalized planner tables, no encryption in V1.</li>
+            <li>Sunday AI call through Vapi behind a voice adapter; Claude for post-call extraction.</li>
+            <li>Local development runs on PGlite with a simulated call, so no services are needed.</li>
+            <li>Call results apply automatically, tagged and undoable.</li>
+            <li>Email reminder as an alternative channel and fallback.</li>
+            <li>Simple text notes in V1.</li>
+            <li>Modular monolith with server-only modules.</li>
+            <li>Encryption comes later as an optional mode that disables the AI call.</li>
           </ul>
         </article>
       </div>
@@ -1151,20 +1353,24 @@ flowchart LR
         <h3>Open Technical Decisions</h3>
         <ol class="decision-list">
           <li>
-            <strong>ORM choice</strong>
-            <span>Prisma is ergonomic and mature; Drizzle is lighter and SQL-oriented. Pick one before schema work starts.</span>
+            <strong>Voice platform</strong>
+            <span>V1 ships with Vapi behind a thin adapter. Before launch, compare outbound rates to your launch countries with Retell and ElevenLabs Agents; switching means writing one adapter.</span>
           </li>
           <li>
-            <strong>Session strategy</strong>
-            <span>Use secure HTTP-only cookie sessions for web-first simplicity, or short-lived access tokens plus refresh tokens if future API clients are expected.</span>
+            <strong>Conversation model and latency</strong>
+            <span>Vapi only accepts its own list of Anthropic models, which does not include Claude Opus 5.5 or Sonnet 5.5. V1 uses <code>claude-sonnet-5</code> for the live call (configurable with <code>VOICE_MODEL</code>); extraction runs on <code>claude-opus-5-5</code> through the Anthropic API. Measure turn latency on real calls.</span>
           </li>
           <li>
-            <strong>Encrypted payload granularity</strong>
-            <span>One encrypted week blob is simpler and leaks less structure. Smaller encrypted records allow partial updates but leak more metadata.</span>
+            <strong>Transcript retention</strong>
+            <span>Keep transcripts 30 days so users can check what the AI heard, or delete them right after extraction.</span>
+          </li>
+          <li>
+            <strong>Pricing for calls</strong>
+            <span>Paid tier only, or a small number of free calls per month before upgrading.</span>
           </li>
           <li>
             <strong>Basic note formatting</strong>
-            <span>Start plain text. Add bold/color only if it does not complicate encryption, editing, or mobile ergonomics.</span>
+            <span>Start plain text. Add bold or color only if it does not complicate editing or mobile ergonomics.</span>
           </li>
         </ol>
       </div>
@@ -1174,7 +1380,7 @@ flowchart LR
   <footer class="footer">
     <div class="shell">
       <p>
-        Generated for the Privacy First Weekly Planning Notebook plan. This is a single-file planning artifact;
+        Generated for the Weekly Planning Notebook plan. This is a single-file planning artifact;
         the plan content and styling are embedded, and Mermaid loads from CDN for diagram rendering.
       </p>
     </div>

@@ -1,0 +1,178 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  /* Headings and the week number. */
+  --font-display: var(--font-display-face);
+  /* Highlighter labels, like handwriting in a paper planner. */
+  --font-hand: var(--font-hand-face);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+
+  /* Highlighter palette: `bg-hl-yellow text-hl-yellow-fg` and so on. */
+  --color-hl-yellow: var(--hl-yellow);
+  --color-hl-yellow-fg: var(--hl-yellow-fg);
+  --color-hl-green: var(--hl-green);
+  --color-hl-green-fg: var(--hl-green-fg);
+  --color-hl-sky: var(--hl-sky);
+  --color-hl-sky-fg: var(--hl-sky-fg);
+  --color-hl-violet: var(--hl-violet);
+  --color-hl-violet-fg: var(--hl-violet-fg);
+  --color-hl-pink: var(--hl-pink);
+  --color-hl-pink-fg: var(--hl-pink-fg);
+  --color-hl-orange: var(--hl-orange);
+  --color-hl-orange-fg: var(--hl-orange-fg);
+  --color-hl-teal: var(--hl-teal);
+  --color-hl-teal-fg: var(--hl-teal-fg);
+  --color-hl-coral: var(--hl-coral);
+  --color-hl-coral-fg: var(--hl-coral-fg);
+  --color-hl-lime: var(--hl-lime);
+  --color-hl-lime-fg: var(--hl-lime-fg);
+
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+/* Light: warm paper, blue-ink text, vivid highlighters. */
+:root {
+  --radius: 0.75rem;
+  --background: oklch(0.972 0.016 85);
+  --foreground: oklch(0.27 0.06 268);
+  --card: oklch(0.993 0.007 90);
+  --card-foreground: oklch(0.27 0.06 268);
+  --popover: oklch(0.995 0.005 90);
+  --popover-foreground: oklch(0.27 0.06 268);
+  --primary: oklch(0.5 0.21 268);
+  --primary-foreground: oklch(0.985 0.01 268);
+  --secondary: oklch(0.94 0.035 268);
+  --secondary-foreground: oklch(0.35 0.13 268);
+  --muted: oklch(0.95 0.018 85);
+  --muted-foreground: oklch(0.52 0.045 265);
+  --accent: oklch(0.94 0.04 268);
+  --accent-foreground: oklch(0.32 0.12 268);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.88 0.03 85);
+  --input: oklch(0.86 0.035 85);
+  --ring: oklch(0.6 0.18 268);
+  --grid-line: oklch(0.62 0.09 240 / 0.09);
+  --spine-shadow: oklch(0.35 0.05 85 / 0.16);
+
+  --hl-yellow: oklch(0.93 0.15 103);
+  --hl-yellow-fg: oklch(0.3 0.06 90);
+  --hl-green: oklch(0.9 0.13 150);
+  --hl-green-fg: oklch(0.3 0.08 155);
+  --hl-sky: oklch(0.88 0.09 225);
+  --hl-sky-fg: oklch(0.3 0.09 245);
+  --hl-violet: oklch(0.87 0.09 295);
+  --hl-violet-fg: oklch(0.32 0.13 290);
+  --hl-pink: oklch(0.88 0.09 350);
+  --hl-pink-fg: oklch(0.33 0.12 355);
+  --hl-orange: oklch(0.89 0.11 70);
+  --hl-orange-fg: oklch(0.34 0.09 55);
+  --hl-teal: oklch(0.9 0.09 180);
+  --hl-teal-fg: oklch(0.3 0.07 185);
+  --hl-coral: oklch(0.85 0.12 40);
+  --hl-coral-fg: oklch(0.33 0.1 35);
+  --hl-lime: oklch(0.92 0.17 125);
+  --hl-lime-fg: oklch(0.3 0.08 130);
+}
+
+/* Dark: deep ink-blue desk, glowing highlighter labels. */
+.dark {
+  --background: oklch(0.17 0.035 268);
+  --foreground: oklch(0.95 0.015 90);
+  --card: oklch(0.215 0.04 268);
+  --card-foreground: oklch(0.95 0.015 90);
+  --popover: oklch(0.235 0.045 268);
+  --popover-foreground: oklch(0.95 0.015 90);
+  --primary: oklch(0.74 0.15 268);
+  --primary-foreground: oklch(0.18 0.05 268);
+  --secondary: oklch(0.29 0.055 268);
+  --secondary-foreground: oklch(0.92 0.03 268);
+  --muted: oklch(0.26 0.045 268);
+  --muted-foreground: oklch(0.73 0.035 268);
+  --accent: oklch(0.31 0.07 268);
+  --accent-foreground: oklch(0.95 0.02 268);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 11%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.7 0.15 268);
+  --grid-line: oklch(0.85 0.06 268 / 0.055);
+  --spine-shadow: oklch(0 0 0 / 0.35);
+
+  --hl-yellow: oklch(0.88 0.16 100);
+  --hl-yellow-fg: oklch(0.25 0.06 90);
+  --hl-green: oklch(0.82 0.15 150);
+  --hl-green-fg: oklch(0.24 0.07 155);
+  --hl-sky: oklch(0.8 0.11 228);
+  --hl-sky-fg: oklch(0.24 0.08 245);
+  --hl-violet: oklch(0.76 0.13 295);
+  --hl-violet-fg: oklch(0.22 0.09 290);
+  --hl-pink: oklch(0.79 0.13 350);
+  --hl-pink-fg: oklch(0.24 0.09 355);
+  --hl-orange: oklch(0.82 0.13 68);
+  --hl-orange-fg: oklch(0.26 0.07 55);
+  --hl-teal: oklch(0.82 0.11 182);
+  --hl-teal-fg: oklch(0.23 0.06 185);
+  --hl-coral: oklch(0.76 0.14 38);
+  --hl-coral-fg: oklch(0.24 0.08 35);
+  --hl-lime: oklch(0.88 0.18 125);
+  --hl-lime-fg: oklch(0.24 0.07 130);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+    /* Soft colored light across the top of the desk. */
+    background-image:
+      radial-gradient(55rem 26rem at 8% -8rem, oklch(0.9 0.09 300 / 0.45), transparent 70%),
+      radial-gradient(50rem 24rem at 92% -8rem, oklch(0.92 0.08 200 / 0.45), transparent 70%),
+      radial-gradient(40rem 20rem at 50% -10rem, oklch(0.95 0.1 95 / 0.35), transparent 70%);
+    background-repeat: no-repeat;
+  }
+  .dark body {
+    background-image:
+      radial-gradient(55rem 26rem at 8% -8rem, oklch(0.45 0.16 300 / 0.35), transparent 70%),
+      radial-gradient(50rem 24rem at 92% -8rem, oklch(0.45 0.12 220 / 0.35), transparent 70%);
+  }
+}
+
+@layer components {
+  /* Grid paper, like the notebook the planner is based on. */
+  .paper-grid {
+    background-image:
+      linear-gradient(var(--grid-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+    background-size: 22px 22px;
+    background-position: -1px -1px;
+  }
+}
