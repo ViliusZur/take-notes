@@ -16,6 +16,6 @@ export const POST = route<RouteContext<"/api/v1/years/[isoYear]/weeks/[isoWeek]/
     const key = weekKeyFromParams(await context.params);
     const input = await parseJson(request, postSchema);
     const task = await createTask(user.id, key, input);
-    return json(task, { status: 201, version: task.version });
+    return json(task, { status: 201 });
   },
 );

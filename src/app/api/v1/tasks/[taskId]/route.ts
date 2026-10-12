@@ -25,7 +25,7 @@ export const PATCH = route<Context>(async (request, context) => {
   const taskId = await taskIdFrom(context);
   const patch = await parseJson(request, patchSchema);
   const task = await updateTask(user.id, taskId, patch, ifMatchVersion(request));
-  return json(task, { version: task.version });
+  return json(task);
 });
 
 export const DELETE = route<Context>(async (_request, context) => {

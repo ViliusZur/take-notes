@@ -2,6 +2,7 @@ import { sql } from "drizzle-orm";
 import { connection } from "next/server";
 import journal from "../../../../drizzle/meta/_journal.json";
 import { db } from "@/server/db";
+import { json } from "@/server/http";
 import { log } from "@/server/log";
 
 /** Migrations applied to this database, from the table Drizzle's migrator keeps. */
@@ -24,13 +25,13 @@ export async function GET() {
     await db.execute(sql`select 1`);
   } catch (error) {
     log.error("Health check could not reach the database", error);
-    return Response.json({ status: "degraded", database: "unreachable" }, { status: 503 });
+    return json({ status: "degraded", database: "unreachable" }, { status: 503 });
   }
 
   const migrations = { applied: await appliedMigrations(), expected: journal.entries.length };
   if (migrations.applied < migrations.expected) {
     log.error("Database is missing migrations; run `npm run db:migrate`", migrations);
-    return Response.json({ status: "degraded", database: "ok", migrations }, { status: 503 });
+    return json({ status: "degraded", database: "ok", migrations }, { status: 503 });
   }
-  return Response.json({ status: "ok", database: "ok", migrations });
+  return json({ status: "ok", database: "ok", migrations });
 }

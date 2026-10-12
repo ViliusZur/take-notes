@@ -53,7 +53,8 @@ export function useWeekActions(key: WeekKey) {
     scope,
     mutationFn: ({ input }: { input: { title: string; assignedDate: string | null }; tempId: string }) =>
       api<TaskDto>(`${weekUrl(key)}/tasks`, { method: "POST", body: input }),
-    onMutate: ({ input, tempId }) => {
+    onMutate: async ({ input, tempId }) => {
+      await queryClient.cancelQueries({ queryKey });
       setWeek((week) => ({
         ...week,
         tasks: [
@@ -91,7 +92,8 @@ export function useWeekActions(key: WeekKey) {
       const version = current()?.tasks.find((t) => t.id === taskId)?.version;
       return api<TaskDto>(`/api/v1/tasks/${taskId}`, { method: "PATCH", body: patch, version });
     },
-    onMutate: ({ taskId, patch }) => {
+    onMutate: async ({ taskId, patch }) => {
+      await queryClient.cancelQueries({ queryKey });
       const previous = current()?.tasks.find((t) => t.id === taskId);
       setWeek((week) => ({
         ...week,
@@ -109,7 +111,8 @@ export function useWeekActions(key: WeekKey) {
   const deleteTask = useMutation({
     scope,
     mutationFn: (taskId: string) => api<void>(`/api/v1/tasks/${taskId}`, { method: "DELETE" }),
-    onMutate: (taskId) => {
+    onMutate: async (taskId) => {
+      await queryClient.cancelQueries({ queryKey });
       const previous = current()?.tasks;
       setWeek((week) => ({ ...week, tasks: week.tasks.filter((t) => t.id !== taskId) }));
       return { previous };

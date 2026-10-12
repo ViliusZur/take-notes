@@ -27,6 +27,8 @@ export async function api<T>(path: string, { method = "GET", body, version }: Op
 
   const response = await fetch(path, {
     method,
+    // Always ask the server; never reuse a browser-cached copy of the user's data.
+    cache: "no-store",
     headers,
     body: body === undefined ? undefined : JSON.stringify(body),
   });

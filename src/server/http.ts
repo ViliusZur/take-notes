@@ -57,18 +57,25 @@ export function ifMatchVersion(request: Request): number | undefined {
   return version;
 }
 
-export function json(data: unknown, init?: ResponseInit & { version?: number }) {
+/**
+ * API responses are per-user and change constantly, so browsers and Vercel's CDN must never store them.
+ * (Vercel's default `public, max-age=0, must-revalidate` lets a browser revalidate and reuse an old body.)
+ * Versions for `If-Match` travel in the JSON body, not in an ETag.
+ */
+const NO_STORE = { "Cache-Control": "private, no-store" };
+
+export function json(data: unknown, init?: ResponseInit) {
   const response = Response.json(data, init);
-  if (init?.version !== undefined) response.headers.set("ETag", `"${init.version}"`);
+  for (const [name, value] of Object.entries(NO_STORE)) response.headers.set(name, value);
   return response;
 }
 
 export function errorResponse(error: unknown) {
   if (error instanceof HttpError) {
-    return Response.json({ error: error.message, ...error.body }, { status: error.status });
+    return json({ error: error.message, ...error.body }, { status: error.status });
   }
   log.error("Unhandled API error", error);
-  return Response.json({ error: "Something went wrong" }, { status: 500 });
+  return json({ error: "Something went wrong" }, { status: 500 });
 }
 
 type Handler<Ctx> = (request: Request, context: Ctx) => Promise<Response>;

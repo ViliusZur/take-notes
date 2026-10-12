@@ -11,5 +11,5 @@ export const PUT = route<RouteContext<"/api/v1/years/[isoYear]/weeks/[isoWeek]/n
   const key = weekKeyFromParams(await context.params);
   const { notes } = await parseJson(request, putSchema);
   const saved = await setNotes(user.id, key, notes, ifMatchVersion(request));
-  return json(saved, { version: saved.notesVersion });
+  return json(saved);
 });
