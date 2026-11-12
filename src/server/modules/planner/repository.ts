@@ -118,6 +118,61 @@ export async function updateWeekNotes(ex: Executor, weekId: string, expectedVers
   return week;
 }
 
+/** Every week's content with versions, for converting the notebook (encryption on/off). */
+export async function listWeekContent(ex: Executor, userId: string) {
+  return ex
+    .select({
+      id: weeks.id,
+      version: weeks.version,
+      notesVersion: weeks.notesVersion,
+      bigPictureDirection: weeks.bigPictureDirection,
+      notes: weeks.notes,
+    })
+    .from(weeks)
+    .where(eq(weeks.userId, userId))
+    .orderBy(asc(weeks.isoYear), asc(weeks.isoWeek));
+}
+
+export async function listTaskContent(ex: Executor, userId: string) {
+  return ex
+    .select({ id: tasks.id, version: tasks.version, title: tasks.title, skippedReason: tasks.skippedReason })
+    .from(tasks)
+    .innerJoin(weeks, eq(tasks.weekId, weeks.id))
+    .where(eq(weeks.userId, userId))
+    .orderBy(asc(tasks.createdAt));
+}
+
+/** Replaces a week's content if neither version moved; bumps both. Returns false on a conflict. */
+export async function replaceWeekContent(
+  ex: Executor,
+  week: { id: string; version: number; notesVersion: number; bigPictureDirection: string; notes: string },
+) {
+  const updated = await ex
+    .update(weeks)
+    .set({
+      bigPictureDirection: week.bigPictureDirection,
+      notes: week.notes,
+      version: sql`${weeks.version} + 1`,
+      notesVersion: sql`${weeks.notesVersion} + 1`,
+    })
+    .where(and(eq(weeks.id, week.id), eq(weeks.version, week.version), eq(weeks.notesVersion, week.notesVersion)))
+    .returning({ id: weeks.id });
+  return updated.length === 1;
+}
+
+/** Replaces a task's content if its version did not move; bumps it. Returns false on a conflict. */
+export async function replaceTaskContent(
+  ex: Executor,
+  task: { id: string; version: number; title: string; skippedReason: string | null },
+) {
+  const updated = await ex
+    .update(tasks)
+    .set({ title: task.title, skippedReason: task.skippedReason, version: sql`${tasks.version} + 1` })
+    .where(and(eq(tasks.id, task.id), eq(tasks.version, task.version)))
+    .returning({ id: tasks.id });
+  return updated.length === 1;
+}
+
 export async function listProcessedCallsForWeek(ex: Executor, userId: string, key: WeekKey) {
   return ex
     .select({ id: calls.id, createdAt: calls.createdAt, importResult: calls.importResult })

@@ -6,6 +6,7 @@ import { planningSchedules, user, type PlanningSchedule } from "@/server/db/sche
 import { requireFeature } from "@/server/features";
 import { HttpError, notFound } from "@/server/http";
 import { log } from "@/server/log";
+import { isEncrypted } from "@/server/modules/encryption/service";
 import type { PlanningScheduleDto, ScheduleChannel } from "@/lib/api-types";
 import {
   CALL_CONSENT_VERSION,
@@ -83,6 +84,9 @@ export async function putSchedule(
   let callConsentVersion = existing?.callConsentVersion ?? null;
 
   if (input.channel === "call") {
+    if (await isEncrypted(db, userId)) {
+      throw new HttpError(422, "Planning calls are off while encryption is on");
+    }
     const owner = await loadUser(userId);
     if (!owner.phoneE164 || !owner.phoneVerifiedAt) {
       throw new HttpError(422, "Verify a phone number before choosing calls");

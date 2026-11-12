@@ -39,10 +39,13 @@ export function CallsCard({
   me,
   schedule,
   features,
+  encrypted,
 }: {
   me: MeDto;
   schedule: PlanningScheduleDto;
   features: FeaturesDto;
+  /** Calls read and write the plan in plain text, so they are off while encryption is on. */
+  encrypted: boolean;
 }) {
   const queryClient = useQueryClient();
   const [transcriptFor, setTranscriptFor] = useState<string | null>(null);
@@ -72,16 +75,18 @@ export function CallsCard({
     onError: (error) => toast.error(errorMessage(error)),
   });
 
-  const canCall = me.phoneVerified && Boolean(schedule.callConsentAt);
+  const canCall = me.phoneVerified && Boolean(schedule.callConsentAt) && !encrypted;
 
   return (
     <Card>
       <CardHeader>
         <CardTitle>Planning calls</CardTitle>
         <CardDescription>
-          {canCall
-            ? "Try a call now, or look back at what was planned on past calls."
-            : "Verify your phone and choose AI phone call above to get planning calls."}
+          {encrypted
+            ? "Planning calls are off while encryption is on: the assistant would have to read your plan. Past transcripts and summaries were deleted."
+            : canCall
+              ? "Try a call now, or look back at what was planned on past calls."
+              : "Verify your phone and choose AI phone call above to get planning calls."}
           {features.simulatedCalls && " Demo mode: calls are simulated with a sample conversation, your phone won't ring."}
         </CardDescription>
         <CardAction>

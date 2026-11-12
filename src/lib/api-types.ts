@@ -67,6 +67,8 @@ export type MeDto = {
   timezone: string;
   phoneE164: string | null;
   phoneVerified: boolean;
+  /** Notes and tasks are end-to-end encrypted; see `EncryptionStatusDto`. */
+  encryptionEnabled: boolean;
 };
 
 export type CallStatus =
@@ -100,8 +102,38 @@ export type CallDetailDto = CallDto & { transcript: string | null };
 
 export type ApiErrorBody = {
   error: string;
+  /** Machine-readable reason, e.g. `locked` (423) or `encryption_off` (409). */
+  code?: string;
   current?: unknown;
   issues?: unknown;
+};
+
+/** What the browser needs to unlock: never the password or the data key itself. */
+export type EncryptionKeysDto = {
+  kdf: "PBKDF2-SHA256";
+  iterations: number;
+  /** base64url */
+  salt: string;
+  /** The data key, AES-GCM-wrapped with a key derived from the password. base64url. */
+  wrappedKey: string;
+  wrapIv: string;
+};
+
+export type EncryptionStatusDto = {
+  enabled: boolean;
+  /** Minutes of inactivity before an unlocked notebook locks again. */
+  lockTimeoutMinutes: number;
+  /** Present when enabled. */
+  keys: EncryptionKeysDto | null;
+};
+
+/**
+ * Every piece of planner content a user has, with versions. Read before turning encryption
+ * on or off (or changing its password) and written back converted, all or nothing.
+ */
+export type NotebookContentDto = {
+  weeks: { id: string; version: number; notesVersion: number; bigPictureDirection: string; notes: string }[];
+  tasks: { id: string; version: number; title: string; skippedReason: string | null }[];
 };
 
 /** Which optional features this server has configured. */

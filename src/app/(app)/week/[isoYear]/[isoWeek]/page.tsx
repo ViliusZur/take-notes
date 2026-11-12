@@ -3,7 +3,7 @@ import { DateTime } from "luxon";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { WeekPlanner } from "@/components/planner/week-planner";
-import { getWeek } from "@/server/modules/planner/service";
+import { getPlainWeek } from "@/server/modules/planner/service";
 import { requirePageUser } from "@/server/page-auth";
 import { formatWeekRange, isValidWeekKey } from "@/lib/weeks";
 import { LoadingBlock } from "../../../loading-block";
@@ -21,9 +21,10 @@ async function Planner({ params }: { params: Params }) {
   const raw = await params;
   const key = { isoYear: Number(raw.isoYear), isoWeek: Number(raw.isoWeek) };
   if (!isValidWeekKey(key)) notFound();
-  const week = await getWeek(me.id, key);
   const today = DateTime.now().setZone(me.timezone).toISODate()!;
-  return <WeekPlanner initialWeek={week} today={today} />;
+  // An encrypted week can only be read in the browser, after unlocking.
+  const week = me.encryptionEnabled ? null : await getPlainWeek(me.id, key);
+  return <WeekPlanner weekKey={key} initialWeek={week} encrypted={week === null} today={today} />;
 }
 
 export default function WeekPage({ params }: PageProps<"/week/[isoYear]/[isoWeek]">) {

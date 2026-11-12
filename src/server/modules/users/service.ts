@@ -5,6 +5,7 @@ import { user } from "@/server/db/schema";
 import { notFound } from "@/server/http";
 import { log } from "@/server/log";
 import type { MeDto } from "@/lib/api-types";
+import { isEncrypted } from "@/server/modules/encryption/service";
 import { recomputeScheduleForTimezone } from "@/server/modules/schedules/service";
 
 export async function getMe(userId: string): Promise<MeDto> {
@@ -17,6 +18,7 @@ export async function getMe(userId: string): Promise<MeDto> {
     timezone: row.timezone,
     phoneE164: row.phoneE164,
     phoneVerified: row.phoneVerifiedAt !== null,
+    encryptionEnabled: await isEncrypted(db, userId),
   };
 }
 

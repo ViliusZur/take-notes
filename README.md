@@ -302,12 +302,33 @@ src/
       planner/         Weeks, tasks, notes with optimistic concurrency (version + If-Match)
       schedules/       Weekly planning schedule, next run in the user's timezone
       phone/           SMS verification (Twilio Verify, or simulated in demo mode)
+      encryption/      Optional end-to-end encryption: unlock proofs, turning it on/off, re-keying
       calls/           Starting calls, provider events, applying and undoing plans
       extraction/      Claude structured-output extraction of the plan from a transcript
       voice/           Voice provider adapter (Vapi, simulated)
       notifications/   Emails (never contain planner content)
       cron/            The 5-minute scheduler run
 ```
+
+**End-to-end encryption (optional, per user)**
+
+Settings → Encryption lets a user encrypt their notes, big picture, task titles, and skip reasons with
+a password of their own. Encryption and decryption happen only in the browser (`src/lib/encryption.ts`):
+
+- PBKDF2-SHA256 (600,000 rounds) turns the password into a secret; HKDF splits it into a key that wraps
+  a random AES-256-GCM data key, and an unlock proof. The server stores the wrapped key and the
+  SHA-256 of the proof, never the password or the data key.
+- Planner API requests from an unlocked browser carry the proof (`X-Unlock-Proof`). Without it an
+  encrypted notebook answers `423 Locked`, and only encrypted values are accepted.
+- Turning encryption on or off, and changing its password (which also replaces the data key), converts
+  the whole notebook in the browser and writes it back in one all-or-nothing transaction.
+- The browser forgets the key on reload, sign-out, "Lock", or after the chosen time without activity.
+- A forgotten password can't be recovered by anyone; the account stays locked.
+- Planning calls are turned off while encryption is on (the assistant would need to read the plan), and
+  stored transcripts, summaries, and extracted plans are deleted when it is turned on.
+- Still visible to the server: which weeks exist, task dates, positions, done/skipped status, and the
+  approximate length of each text. Database backups taken before encryption was turned on still hold
+  the old plain text until they expire.
 
 **A Sunday call, end to end**
 

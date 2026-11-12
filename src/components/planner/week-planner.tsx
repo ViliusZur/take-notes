@@ -32,6 +32,7 @@ import {
   weekPath,
   type WeekKey,
 } from "@/lib/weeks";
+import { EncryptionGate } from "@/components/encryption/encryption-gate";
 import { AddTaskForm } from "./add-task-form";
 import { AutosaveTextarea } from "./autosave-textarea";
 import { DAY_TONE, Marker } from "./marker";
@@ -86,14 +87,55 @@ function DropZone({
 }
 
 /**
+ * The week planner. A plain notebook arrives rendered by the server (`initialWeek`); an encrypted
+ * one is fetched and decrypted in the browser once it is unlocked.
+ */
+export function WeekPlanner({
+  weekKey,
+  initialWeek,
+  encrypted,
+  today,
+}: {
+  weekKey: WeekKey;
+  initialWeek: WeekDto | null;
+  encrypted: boolean;
+  today: string;
+}) {
+  return (
+    <EncryptionGate encrypted={encrypted}>
+      <WeekLoader weekKey={weekKey} initialWeek={initialWeek} today={today} />
+    </EncryptionGate>
+  );
+}
+
+function WeekLoader({ weekKey, initialWeek, today }: { weekKey: WeekKey; initialWeek: WeekDto | null; today: string }) {
+  const { data: week, isError, refetch, isFetching } = useWeek(weekKey, initialWeek);
+  if (week) return <WeekSpread week={week} today={today} />;
+  if (isError) {
+    return (
+      <div className="flex min-h-64 flex-col items-center justify-center gap-3 text-sm" role="alert">
+        <p className="text-destructive">Could not load this week.</p>
+        <Button variant="outline" size="sm" disabled={isFetching} onClick={() => void refetch()}>
+          Try again
+        </Button>
+      </div>
+    );
+  }
+  return (
+    <div className="flex min-h-64 items-center justify-center text-sm text-muted-foreground" role="status">
+      Opening your week…
+    </div>
+  );
+}
+
+/**
  * A two-page weekly spread. Left page: month, week number, big picture, and each day's tasks.
  * Right page: the weekly to-do list and the week's notes.
  *
  * On large screens the spread fits the window: long day lists and long to-do lists scroll inside
  * their page, and the notes take the remaining height. Smaller screens stack the pages.
  */
-export function WeekPlanner({ initialWeek, today }: { initialWeek: WeekDto; today: string }) {
-  const { data: week } = useWeek(initialWeek);
+function WeekSpread({ week, today }: { week: WeekDto; today: string }) {
   const key = { isoYear: week.isoYear, isoWeek: week.isoWeek };
   const actions = useWeekActions(key);
   const currentWeek = weekKeyOfDate(today);

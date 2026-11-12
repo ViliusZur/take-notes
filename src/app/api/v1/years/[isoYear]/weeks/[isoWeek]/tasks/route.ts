@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { TASK_KINDS } from "@/server/db/schema";
-import { json, parseJson, requireUser, route } from "@/server/http";
+import { json, parseJson, requireUser, route, unlockProof } from "@/server/http";
 import { createTask } from "@/server/modules/planner/service";
 import { isoDate, taskTitle, weekKeyFromParams } from "@/server/validation";
 
@@ -15,7 +15,7 @@ export const POST = route<RouteContext<"/api/v1/years/[isoYear]/weeks/[isoWeek]/
     const user = await requireUser();
     const key = weekKeyFromParams(await context.params);
     const input = await parseJson(request, postSchema);
-    const task = await createTask(user.id, key, input);
+    const task = await createTask(user.id, key, input, unlockProof(request));
     return json(task, { status: 201 });
   },
 );

@@ -86,6 +86,29 @@ export const verification = pgTable(
 );
 
 // ---------------------------------------------------------------------------
+// End-to-end encryption (a row exists while encryption is on)
+// ---------------------------------------------------------------------------
+
+/**
+ * Only what the browser needs to unlock. The password and the data key never reach the server:
+ * `wrapped_key` is the data key encrypted with a key derived from the password.
+ */
+export const userEncryption = pgTable("user_encryption", {
+  userId: text("user_id")
+    .primaryKey()
+    .references(() => user.id, { onDelete: "cascade" }),
+  kdf: text("kdf").notNull(),
+  kdfIterations: integer("kdf_iterations").notNull(),
+  kdfSalt: text("kdf_salt").notNull(),
+  wrappedKey: text("wrapped_key").notNull(),
+  wrapIv: text("wrap_iv").notNull(),
+  /** SHA-256 of the unlock proof (derived from the password), checked on every content request. */
+  proofHash: text("proof_hash").notNull(),
+  lockTimeoutMinutes: integer("lock_timeout_minutes").notNull().default(15),
+  ...timestamps,
+});
+
+// ---------------------------------------------------------------------------
 // Planner
 // ---------------------------------------------------------------------------
 
@@ -99,6 +122,7 @@ export const weeks = pgTable(
     isoYear: integer("iso_year").notNull(),
     isoWeek: integer("iso_week").notNull(),
     weekStartDate: date("week_start_date").notNull(),
+    /** Plain text, or an `enc1.` envelope when the owner has encryption on (as are notes and task text). */
     bigPictureDirection: text("big_picture_direction").notNull().default(""),
     /** Guards `big_picture_direction`. */
     version: integer("version").notNull().default(1),
@@ -254,6 +278,7 @@ export const calls = pgTable(
 );
 
 export type User = typeof user.$inferSelect;
+export type UserEncryption = typeof userEncryption.$inferSelect;
 export type Week = typeof weeks.$inferSelect;
 export type Task = typeof tasks.$inferSelect;
 export type PlanningSchedule = typeof planningSchedules.$inferSelect;

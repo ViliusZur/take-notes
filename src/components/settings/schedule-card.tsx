@@ -28,16 +28,17 @@ function formatNextRun(iso: string | null, timezone: string) {
   }).format(new Date(iso));
 }
 
-type Props = { me: MeDto; schedule: PlanningScheduleDto; features: FeaturesDto };
+type Props = { me: MeDto; schedule: PlanningScheduleDto; features: FeaturesDto; encrypted: boolean };
 
 export function ScheduleCard(props: Props) {
   // Remount the form whenever the saved schedule changes.
   return <ScheduleForm key={JSON.stringify(props.schedule)} {...props} />;
 }
 
-function ScheduleForm({ me, schedule, features }: Props) {
+function ScheduleForm({ me, schedule, features, encrypted }: Props) {
   const queryClient = useQueryClient();
-  const channels: ScheduleChannel[] = [...(features.calls ? ["call" as const] : []), ...(features.email ? ["email" as const] : [])];
+  const callsAvailable = features.calls && !encrypted;
+  const channels: ScheduleChannel[] = [...(callsAvailable ? ["call" as const] : []), ...(features.email ? ["email" as const] : [])];
   const [enabled, setEnabled] = useState(schedule.enabled);
   const [channel, setChannel] = useState<ScheduleChannel>(
     channels.includes(schedule.channel) ? schedule.channel : channels[0],
@@ -92,7 +93,13 @@ function ScheduleForm({ me, schedule, features }: Props) {
             <Field
               id="schedule-channel"
               label="How"
-              hint={features.calls && !me.phoneVerified ? "Verify a phone number below to choose calls." : undefined}
+              hint={
+                features.calls && encrypted
+                  ? "Planning calls are off while encryption is on: the assistant can't read an encrypted plan."
+                  : features.calls && !me.phoneVerified
+                    ? "Verify a phone number below to choose calls."
+                    : undefined
+              }
             >
               <NativeSelect
                 id="schedule-channel"
@@ -100,7 +107,7 @@ function ScheduleForm({ me, schedule, features }: Props) {
                 onChange={(event) => setChannel(event.target.value as ScheduleChannel)}
               >
                 {features.calls && (
-                  <option value="call" disabled={!me.phoneVerified}>
+                  <option value="call" disabled={!me.phoneVerified || encrypted}>
                     AI phone call
                   </option>
                 )}
@@ -169,7 +176,7 @@ function ScheduleForm({ me, schedule, features }: Props) {
         <CardFooter className="flex flex-wrap items-center justify-between gap-3 pt-5">
           <p className="text-sm text-muted-foreground">
             {schedule.enabled && nextRun
-              ? `Next ${schedule.channel === "call" && features.calls ? "call" : "reminder"}: ${nextRun}`
+              ? `Next ${schedule.channel === "call" && callsAvailable ? "call" : "reminder"}: ${nextRun}`
               : "Not scheduled."}
           </p>
           <Button type="submit" disabled={save.isPending || (needsConsent && !consent)}>

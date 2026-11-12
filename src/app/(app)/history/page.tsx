@@ -9,7 +9,7 @@ export const metadata: Metadata = { title: "History" };
 
 async function History() {
   const me = await requirePageUser();
-  return <HistoryView initialYear={currentWeekKey(me.timezone).isoYear} />;
+  return <HistoryView initialYear={currentWeekKey(me.timezone).isoYear} encrypted={me.encryptionEnabled} />;
 }
 
 export default function HistoryPage() {
