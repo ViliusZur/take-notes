@@ -1,14 +1,14 @@
 ---
 name: jobs-done
-description: Ships the current code changes end to end - creates a branch from main, commits with a descriptive message, opens a PR, merges it once CI passes, tags the merge commit with a semantic version, then deletes the branch locally and on GitHub. Use whenever the user says "job's done" (also "jobs done", "job done"), or runs /jobs-done.
+description: Ships the current code changes end to end - creates a branch from main, bumps the project version, commits with a descriptive message, opens a PR, merges it once CI passes, tags the merge commit with the matching semantic version, then deletes the branch locally and on GitHub. Use whenever the user says "job's done" (also "jobs done", "job done"), or runs /jobs-done.
 argument-hint: "[optional note about the change]"
 ---
 
 # Job's done
 
 The user says "job's done" when the work in the working tree is finished and should land on the
-default branch. Saying it authorizes everything below: branch, commit, push, PR, merge once CI
-passes, pushing a version tag, and deleting the branch. Do it without asking again, except where a
+default branch. Saying it authorizes everything below: branch, version bump, commit, push, PR,
+merge once CI passes, pushing a version tag, and deleting the branch. Do it without asking again, except where a
 step says to stop.
 
 If the user added text to the command, use it as context for the commit message and PR description.
@@ -40,28 +40,55 @@ Then look at what is being shipped:
 - Name: short kebab-case describing the change, e.g. `encryption-password-tweaks`. If it exists
   locally or on origin (`git ls-remote --heads origin <name>`), add a suffix.
 
-## 3. Commit
+## 3. Pick the version and bump the manifest
 
+The release version is written into the project's manifest in this PR, so the merge commit and its
+tag always agree.
+
+- Previous version: the newest semver tag on BASE,
+  `git tag --merged origin/BASE --list 'v[0-9]*' --sort=-v:refname | head -1`. Keep the repo's
+  prefix style (`v1.2.3` or `1.2.3`; default `v`). No tags yet: the manifest's `version`, or
+  `0.0.0`. If the manifest is already ahead of the newest tag, ask which version to start from.
+- Bump by the biggest change since the previous version: what this PR ships plus anything already
+  on BASE since that tag (`git log --first-parent --format='%h %s' <previous>..origin/BASE`).
+  - **major**: breaking for users, API clients, or deployers. Removed or incompatible behavior or
+    endpoints, migrations that drop or rewrite data, newly required config. While the major
+    version is 0, bump the minor instead, and never go to 1.0.0 unless the user asks.
+  - **minor**: new features or capabilities, new endpoints, additive migrations.
+  - **patch**: fixes, small tweaks, copy changes, refactors, tests, docs, tooling, CI.
+- The version must not be tagged already (`git ls-remote --tags origin vX.Y.Z` prints nothing).
+  Never move or reuse a tag.
+- Write it into the manifest:
+  - `package.json`: `npm version X.Y.Z --no-git-tag-version --ignore-scripts`. It also updates
+    `package-lock.json`, and neither commits nor tags.
+  - Other manifests (`Cargo.toml`, `pyproject.toml`, ...): edit the `version` field, and the root
+    package's entry in the lockfile if there is one.
+  - No manifest with a version: skip this; the tag alone carries the version.
+
+## 4. Commit
+
+- The version bump goes in the same commit as the change.
 - Stage what ships. Prefer explicit paths over `git add -A` when something is being left out.
 - Match the repo's message style (`git log --oneline -10`). Subject: imperative, at most 72
   characters, says what changed. Body: what and why, wrapped at 72, plus anything a reviewer or
-  deployer must know (migrations, new env vars, behavior changes).
+  deployer must know (migrations, new env vars, behavior changes), and the new version.
 - End with the commit attribution trailer your environment asks for, if any.
 - A failing pre-commit hook: fix the problem and commit again; never `--no-verify`. If it can't
   be fixed, stop and report.
 
-## 4. Push and open the PR
+## 5. Push and open the PR
 
 - `git push -u origin <branch>`.
 - Reuse an existing PR for the branch (`gh pr list --head <branch> --json number,url`).
 - Otherwise `gh pr create --base BASE --head <branch> --title "<subject>" --body-file -`, ready
   for review, not a draft. Follow `.github/pull_request_template.md` if present; otherwise use
-  sections **What**, **Why**, **Reviewer notes** (risks, deploy steps) and **Testing** (what was
-  run and its result; never claim tests that weren't run). End with the PR attribution line your
+  sections **What** (including the version it releases and why that bump), **Why**,
+  **Reviewer notes** (risks, deploy steps) and **Testing** (what was run and its result; never
+  claim tests that weren't run). End with the PR attribution line your
   environment asks for, if any.
 - In the Claude desktop app, check or bind the PR with the `ccd_pr` tools if they're available.
 
-## 5. Merge once CI passes
+## 6. Merge once CI passes
 
 Deploy prerequisites first: if the change adds database migrations (`drizzle/`, `migrations/`,
 `prisma/migrations/`, `db/migrate/`, ...) or needs new environment variables, and merging deploys
@@ -86,25 +113,16 @@ background and wait for it to finish rather than polling.
 - Merge refused (conflicts, branch protection, required review): report why and stop. Never force
   it, and never enable GitHub auto-merge or change repository settings to get around it.
 
-## 6. Tag the merge with a semantic version
+## 7. Tag the merge commit
 
-Once `gh pr view <pr> --json state --jq .state` says `MERGED`, put an annotated version tag on the
-merge commit and push it.
+Once `gh pr view <pr> --json state --jq .state` says `MERGED`, put an annotated tag for the version
+from step 3 on the merge commit and push it.
 
 - Merge commit: `gh pr view <pr> --json mergeCommit --jq .mergeCommit.oid`. Run `git fetch origin`
   and confirm it is on BASE: `git merge-base --is-ancestor <sha> origin/BASE`.
-- Previous version: the newest semver tag reachable from it,
-  `git tag --merged <sha> --list 'v[0-9]*' --sort=-v:refname | head -1`. Keep the repo's existing
-  prefix style (`v1.2.3` or `1.2.3`; default `v`). No tags yet: the previous version is the
-  manifest's `version` (`package.json`, `Cargo.toml`, `pyproject.toml`, ...) or `0.0.0`, and the
-  new tag covers the project's history so far.
-- Bump by the biggest change since the previous version:
-  - **major**: breaking for users, API clients, or deployers. Removed or incompatible behavior or
-    endpoints, migrations that drop or rewrite data, newly required config. While the major
-    version is 0, bump the minor instead, and never go to 1.0.0 unless the user asks.
-  - **minor**: new features or capabilities, new endpoints, additive migrations.
-  - **patch**: fixes, small tweaks, copy changes, refactors, tests, docs, tooling, CI.
-- Never move, reuse, or delete an existing tag. If the version is already taken, stop and ask.
+- Confirm the merge commit carries the version (for example
+  `git show <sha>:package.json | grep '"version"'`) and that the tag is still free. If another
+  release landed on BASE first and they no longer match, stop and ask.
 - The message is detailed and written for someone deciding whether to deploy, not a raw commit
   dump. Build it from `git log --first-parent --format='%h %s' <previous>..<sha>` (just `<sha>`
   when there is no previous tag), and read the merged PRs (`gh pr view <n> --json title,body`) for
@@ -132,7 +150,7 @@ merge commit and push it.
   git push origin vX.Y.Z
   ```
 
-## 7. Clean up
+## 8. Clean up
 
 Only after `gh pr view <pr> --json state --jq .state` says `MERGED`:
 
@@ -143,7 +161,7 @@ Only after `gh pr view <pr> --json state --jq .state` says `MERGED`:
 - `git push origin --delete <branch>` (skip if GitHub already deleted it), then
   `git fetch --prune origin`.
 
-## 8. Report
+## 9. Report
 
 A few lines: the PR link, the merge commit, the new tag and why that bump, that the branch is gone
 locally and on GitHub, and anything still to do (deploy steps, migrations).
