@@ -167,6 +167,27 @@ export function formatWeekday(isoDate: string) {
   return DAY_NAMES[isoWeekday(parseIsoDate(isoDate)) - 1].slice(0, 3);
 }
 
+/** Full weekday, e.g. "Wednesday". */
+export function formatWeekdayLong(isoDate: string) {
+  return DAY_NAMES[isoWeekday(parseIsoDate(isoDate)) - 1];
+}
+
+/** "Nov 12". */
+export function formatMonthDay(isoDate: string) {
+  const date = parseIsoDate(isoDate);
+  return `${shortMonth(date)} ${date.getUTCDate()}`;
+}
+
+/** Day of the month, e.g. 12. */
+export function dayOfMonth(isoDate: string) {
+  return parseIsoDate(isoDate).getUTCDate();
+}
+
+/** How many weeks `key` is after `from` (negative when before). */
+export function weeksBetween(from: WeekKey, key: WeekKey) {
+  return Math.round((mondayOf(key).getTime() - mondayOf(from).getTime()) / (7 * DAY_MS));
+}
+
 /** "Mon 12". */
 export function formatDayLabel(isoDate: string) {
   return `${formatWeekday(isoDate)} ${parseIsoDate(isoDate).getUTCDate()}`;

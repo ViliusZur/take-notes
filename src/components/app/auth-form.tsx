@@ -62,14 +62,14 @@ export function AuthForm({ mode, googleEnabled }: { mode: Mode; googleEnabled: b
   const isSignUp = mode === "sign-up";
 
   return (
-    <Card className="paper-grid w-full max-w-sm shadow-lg shadow-primary/10">
-      <CardHeader>
-        <CardTitle className="font-display text-2xl">{isSignUp ? "Create your notebook" : "Welcome back"}</CardTitle>
+    <Card className="w-full max-w-sm gap-6 rounded-3xl py-6 shadow-xl shadow-primary/5 sm:py-8">
+      <CardHeader className="sm:px-8">
+        <CardTitle className="text-2xl">{isSignUp ? "Create your notebook" : "Welcome back"}</CardTitle>
         <CardDescription>
           {isSignUp ? "Start planning your weeks." : "Sign in to open your weekly planner."}
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-4 sm:px-8">
         <form onSubmit={onSubmit} className="space-y-4">
           {isSignUp && (
             <div className="space-y-2">
@@ -98,7 +98,7 @@ export function AuthForm({ mode, googleEnabled }: { mode: Mode; googleEnabled: b
               {error}
             </p>
           )}
-          <Button type="submit" className="w-full" disabled={pending}>
+          <Button type="submit" size="lg" className="w-full" disabled={pending}>
             {pending ? "Please wait…" : isSignUp ? "Create account" : "Sign in"}
           </Button>
         </form>
@@ -107,24 +107,24 @@ export function AuthForm({ mode, googleEnabled }: { mode: Mode; googleEnabled: b
             <div className="flex items-center gap-3 text-xs text-muted-foreground">
               <Separator className="flex-1" /> or <Separator className="flex-1" />
             </div>
-            <Button variant="outline" className="w-full" onClick={signInWithGoogle}>
+            <Button variant="outline" size="lg" className="w-full" onClick={signInWithGoogle}>
               Continue with Google
             </Button>
           </>
         )}
       </CardContent>
-      <CardFooter className="text-sm text-muted-foreground">
+      <CardFooter className="justify-center text-sm text-muted-foreground sm:px-8">
         {isSignUp ? (
           <span>
             Already have an account?{" "}
-            <Link className="text-foreground underline underline-offset-4" href="/sign-in">
+            <Link className="font-medium text-primary underline-offset-4 hover:underline" href="/sign-in">
               Sign in
             </Link>
           </span>
         ) : (
           <span>
             New here?{" "}
-            <Link className="text-foreground underline underline-offset-4" href="/sign-up">
+            <Link className="font-medium text-primary underline-offset-4 hover:underline" href="/sign-up">
               Create an account
             </Link>
           </span>

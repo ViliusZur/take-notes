@@ -20,7 +20,7 @@ export function PasswordInput({ className, disabled, ...props }: Omit<ComponentP
         spellCheck={false}
         autoCapitalize="off"
         autoCorrect="off"
-        className={cn("pr-10", className)}
+        className={cn("pr-11 sm:pr-10", className)}
       />
       <button
         type="button"
@@ -29,7 +29,7 @@ export function PasswordInput({ className, disabled, ...props }: Omit<ComponentP
         aria-label={label}
         aria-pressed={visible}
         title={label}
-        className="absolute inset-y-0 right-0 flex w-9 items-center justify-center rounded-r-md text-muted-foreground transition-colors hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50"
+        className="absolute inset-y-0 right-0 flex w-11 items-center justify-center rounded-r-lg sm:w-9 text-muted-foreground transition-colors hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50"
       >
         {visible ? <EyeOff className="size-4" aria-hidden /> : <Eye className="size-4" aria-hidden />}
       </button>

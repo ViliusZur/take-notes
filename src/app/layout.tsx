@@ -1,6 +1,7 @@
-import type { Metadata } from "next";
-import { Bricolage_Grotesque, Caveat, Geist, Geist_Mono } from "next/font/google";
+import type { Metadata, Viewport } from "next";
+import { Geist, Geist_Mono } from "next/font/google";
 import { Providers } from "@/components/app/providers";
+import { THEME_COLORS } from "@/components/app/theme-color";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -13,20 +14,19 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const display = Bricolage_Grotesque({
-  variable: "--font-display-face",
-  subsets: ["latin", "latin-ext"],
-});
-
-const hand = Caveat({
-  variable: "--font-hand-face",
-  subsets: ["latin", "latin-ext"],
-  weight: ["600", "700"],
-});
-
 export const metadata: Metadata = {
   title: { default: "Weekly Planner", template: "%s · Weekly Planner" },
   description: "A weekly planning notebook with a Sunday AI planning call.",
+  appleWebApp: { title: "Planner", statusBarStyle: "default" },
+};
+
+export const viewport: Viewport = {
+  // Lets the layout reach under the notch and home indicator; safe-area padding keeps content clear.
+  viewportFit: "cover",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: THEME_COLORS.light },
+    { media: "(prefers-color-scheme: dark)", color: THEME_COLORS.dark },
+  ],
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -34,7 +34,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${geistSans.variable} ${geistMono.variable} ${display.variable} ${hand.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col bg-background text-foreground">
         <Providers>{children}</Providers>

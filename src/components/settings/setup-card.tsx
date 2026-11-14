@@ -28,7 +28,7 @@ export function SetupCard({ features }: { features: FeaturesDto }) {
           turn them on. The README has a step-by-step guide.
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-5 pt-5">
+      <CardContent className="space-y-5">
         {!features.email && (
           <Missing
             title="Email reminders are off"

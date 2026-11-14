@@ -9,10 +9,6 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-  /* Headings and the week number. */
-  --font-display: var(--font-display-face);
-  /* Highlighter labels, like handwriting in a paper planner. */
-  --font-hand: var(--font-hand-face);
   --color-ring: var(--ring);
   --color-input: var(--input);
   --color-border: var(--border);
@@ -29,26 +25,23 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+  --color-success: var(--success);
 
-  /* Highlighter palette: `bg-hl-yellow text-hl-yellow-fg` and so on. */
-  --color-hl-yellow: var(--hl-yellow);
-  --color-hl-yellow-fg: var(--hl-yellow-fg);
-  --color-hl-green: var(--hl-green);
-  --color-hl-green-fg: var(--hl-green-fg);
-  --color-hl-sky: var(--hl-sky);
-  --color-hl-sky-fg: var(--hl-sky-fg);
-  --color-hl-violet: var(--hl-violet);
-  --color-hl-violet-fg: var(--hl-violet-fg);
-  --color-hl-pink: var(--hl-pink);
-  --color-hl-pink-fg: var(--hl-pink-fg);
-  --color-hl-orange: var(--hl-orange);
-  --color-hl-orange-fg: var(--hl-orange-fg);
-  --color-hl-teal: var(--hl-teal);
-  --color-hl-teal-fg: var(--hl-teal-fg);
-  --color-hl-coral: var(--hl-coral);
-  --color-hl-coral-fg: var(--hl-coral-fg);
-  --color-hl-lime: var(--hl-lime);
-  --color-hl-lime-fg: var(--hl-lime-fg);
+  /* Soft tinted tones for icons and chips: `bg-tone-violet text-tone-violet-fg` and so on. */
+  --color-tone-amber: var(--tone-amber);
+  --color-tone-amber-fg: var(--tone-amber-fg);
+  --color-tone-green: var(--tone-green);
+  --color-tone-green-fg: var(--tone-green-fg);
+  --color-tone-sky: var(--tone-sky);
+  --color-tone-sky-fg: var(--tone-sky-fg);
+  --color-tone-violet: var(--tone-violet);
+  --color-tone-violet-fg: var(--tone-violet-fg);
+  --color-tone-pink: var(--tone-pink);
+  --color-tone-pink-fg: var(--tone-pink-fg);
+  --color-tone-orange: var(--tone-orange);
+  --color-tone-orange-fg: var(--tone-orange-fg);
+  --color-tone-teal: var(--tone-teal);
+  --color-tone-teal-fg: var(--tone-teal-fg);
 
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
@@ -59,120 +52,109 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-/* Light: warm paper, blue-ink text, vivid highlighters. */
+/* Light: clean neutral surfaces with a single indigo accent. */
 :root {
-  --radius: 0.75rem;
-  --background: oklch(0.972 0.016 85);
-  --foreground: oklch(0.27 0.06 268);
-  --card: oklch(0.993 0.007 90);
-  --card-foreground: oklch(0.27 0.06 268);
-  --popover: oklch(0.995 0.005 90);
-  --popover-foreground: oklch(0.27 0.06 268);
-  --primary: oklch(0.5 0.21 268);
-  --primary-foreground: oklch(0.985 0.01 268);
-  --secondary: oklch(0.94 0.035 268);
-  --secondary-foreground: oklch(0.35 0.13 268);
-  --muted: oklch(0.95 0.018 85);
-  --muted-foreground: oklch(0.52 0.045 265);
-  --accent: oklch(0.94 0.04 268);
-  --accent-foreground: oklch(0.32 0.12 268);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.88 0.03 85);
-  --input: oklch(0.86 0.035 85);
-  --ring: oklch(0.6 0.18 268);
-  --grid-line: oklch(0.62 0.09 240 / 0.09);
-  --spine-shadow: oklch(0.35 0.05 85 / 0.16);
+  --radius: 0.625rem;
+  --background: oklch(0.985 0.002 265);
+  --foreground: oklch(0.2 0.015 265);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.2 0.015 265);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.2 0.015 265);
+  --primary: oklch(0.52 0.2 270);
+  --primary-foreground: oklch(0.99 0.005 270);
+  --secondary: oklch(0.955 0.012 270);
+  --secondary-foreground: oklch(0.3 0.06 270);
+  --muted: oklch(0.96 0.004 265);
+  --muted-foreground: oklch(0.52 0.015 265);
+  --accent: oklch(0.955 0.01 270);
+  --accent-foreground: oklch(0.25 0.04 270);
+  --destructive: oklch(0.58 0.22 25);
+  --success: oklch(0.6 0.15 155);
+  --border: oklch(0.915 0.006 265);
+  --input: oklch(0.88 0.008 265);
+  --ring: oklch(0.6 0.17 270);
+  --header: oklch(0.985 0.002 265 / 0.8);
 
-  --hl-yellow: oklch(0.93 0.15 103);
-  --hl-yellow-fg: oklch(0.3 0.06 90);
-  --hl-green: oklch(0.9 0.13 150);
-  --hl-green-fg: oklch(0.3 0.08 155);
-  --hl-sky: oklch(0.88 0.09 225);
-  --hl-sky-fg: oklch(0.3 0.09 245);
-  --hl-violet: oklch(0.87 0.09 295);
-  --hl-violet-fg: oklch(0.32 0.13 290);
-  --hl-pink: oklch(0.88 0.09 350);
-  --hl-pink-fg: oklch(0.33 0.12 355);
-  --hl-orange: oklch(0.89 0.11 70);
-  --hl-orange-fg: oklch(0.34 0.09 55);
-  --hl-teal: oklch(0.9 0.09 180);
-  --hl-teal-fg: oklch(0.3 0.07 185);
-  --hl-coral: oklch(0.85 0.12 40);
-  --hl-coral-fg: oklch(0.33 0.1 35);
-  --hl-lime: oklch(0.92 0.17 125);
-  --hl-lime-fg: oklch(0.3 0.08 130);
+  --tone-amber: oklch(0.95 0.06 85);
+  --tone-amber-fg: oklch(0.45 0.11 65);
+  --tone-green: oklch(0.95 0.05 155);
+  --tone-green-fg: oklch(0.42 0.11 155);
+  --tone-sky: oklch(0.95 0.035 230);
+  --tone-sky-fg: oklch(0.45 0.12 240);
+  --tone-violet: oklch(0.945 0.035 290);
+  --tone-violet-fg: oklch(0.45 0.17 285);
+  --tone-pink: oklch(0.95 0.035 350);
+  --tone-pink-fg: oklch(0.47 0.16 355);
+  --tone-orange: oklch(0.95 0.045 55);
+  --tone-orange-fg: oklch(0.5 0.14 45);
+  --tone-teal: oklch(0.95 0.04 185);
+  --tone-teal-fg: oklch(0.43 0.09 185);
 }
 
-/* Dark: deep ink-blue desk, glowing highlighter labels. */
+/* Dark: deep neutral surfaces, the same accent a step brighter. */
 .dark {
-  --background: oklch(0.17 0.035 268);
-  --foreground: oklch(0.95 0.015 90);
-  --card: oklch(0.215 0.04 268);
-  --card-foreground: oklch(0.95 0.015 90);
-  --popover: oklch(0.235 0.045 268);
-  --popover-foreground: oklch(0.95 0.015 90);
-  --primary: oklch(0.74 0.15 268);
-  --primary-foreground: oklch(0.18 0.05 268);
-  --secondary: oklch(0.29 0.055 268);
-  --secondary-foreground: oklch(0.92 0.03 268);
-  --muted: oklch(0.26 0.045 268);
-  --muted-foreground: oklch(0.73 0.035 268);
-  --accent: oklch(0.31 0.07 268);
-  --accent-foreground: oklch(0.95 0.02 268);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 11%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.7 0.15 268);
-  --grid-line: oklch(0.85 0.06 268 / 0.055);
-  --spine-shadow: oklch(0 0 0 / 0.35);
+  --background: oklch(0.155 0.008 265);
+  --foreground: oklch(0.96 0.004 265);
+  --card: oklch(0.2 0.01 265);
+  --card-foreground: oklch(0.96 0.004 265);
+  --popover: oklch(0.23 0.012 265);
+  --popover-foreground: oklch(0.96 0.004 265);
+  --primary: oklch(0.7 0.15 272);
+  --primary-foreground: oklch(0.16 0.03 272);
+  --secondary: oklch(0.27 0.025 270);
+  --secondary-foreground: oklch(0.9 0.03 270);
+  --muted: oklch(0.24 0.01 265);
+  --muted-foreground: oklch(0.69 0.015 265);
+  --accent: oklch(0.27 0.015 265);
+  --accent-foreground: oklch(0.96 0.004 265);
+  --destructive: oklch(0.68 0.19 22);
+  --success: oklch(0.72 0.15 155);
+  --border: oklch(1 0 0 / 9%);
+  --input: oklch(1 0 0 / 14%);
+  --ring: oklch(0.7 0.15 272);
+  --header: oklch(0.155 0.008 265 / 0.8);
 
-  --hl-yellow: oklch(0.88 0.16 100);
-  --hl-yellow-fg: oklch(0.25 0.06 90);
-  --hl-green: oklch(0.82 0.15 150);
-  --hl-green-fg: oklch(0.24 0.07 155);
-  --hl-sky: oklch(0.8 0.11 228);
-  --hl-sky-fg: oklch(0.24 0.08 245);
-  --hl-violet: oklch(0.76 0.13 295);
-  --hl-violet-fg: oklch(0.22 0.09 290);
-  --hl-pink: oklch(0.79 0.13 350);
-  --hl-pink-fg: oklch(0.24 0.09 355);
-  --hl-orange: oklch(0.82 0.13 68);
-  --hl-orange-fg: oklch(0.26 0.07 55);
-  --hl-teal: oklch(0.82 0.11 182);
-  --hl-teal-fg: oklch(0.23 0.06 185);
-  --hl-coral: oklch(0.76 0.14 38);
-  --hl-coral-fg: oklch(0.24 0.08 35);
-  --hl-lime: oklch(0.88 0.18 125);
-  --hl-lime-fg: oklch(0.24 0.07 130);
+  --tone-amber: oklch(0.32 0.06 75);
+  --tone-amber-fg: oklch(0.87 0.12 85);
+  --tone-green: oklch(0.31 0.05 155);
+  --tone-green-fg: oklch(0.85 0.13 155);
+  --tone-sky: oklch(0.31 0.05 235);
+  --tone-sky-fg: oklch(0.85 0.09 230);
+  --tone-violet: oklch(0.31 0.07 285);
+  --tone-violet-fg: oklch(0.85 0.1 290);
+  --tone-pink: oklch(0.31 0.06 350);
+  --tone-pink-fg: oklch(0.86 0.09 350);
+  --tone-orange: oklch(0.32 0.06 50);
+  --tone-orange-fg: oklch(0.86 0.1 60);
+  --tone-teal: oklch(0.31 0.045 185);
+  --tone-teal-fg: oklch(0.85 0.08 185);
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
+  html {
+    -webkit-tap-highlight-color: transparent;
+    color-scheme: light;
+  }
+  html.dark {
+    color-scheme: dark;
+  }
   body {
     @apply bg-background text-foreground;
-    /* Soft colored light across the top of the desk. */
-    background-image:
-      radial-gradient(55rem 26rem at 8% -8rem, oklch(0.9 0.09 300 / 0.45), transparent 70%),
-      radial-gradient(50rem 24rem at 92% -8rem, oklch(0.92 0.08 200 / 0.45), transparent 70%),
-      radial-gradient(40rem 20rem at 50% -10rem, oklch(0.95 0.1 95 / 0.35), transparent 70%);
-    background-repeat: no-repeat;
   }
-  .dark body {
-    background-image:
-      radial-gradient(55rem 26rem at 8% -8rem, oklch(0.45 0.16 300 / 0.35), transparent 70%),
-      radial-gradient(50rem 24rem at 92% -8rem, oklch(0.45 0.12 220 / 0.35), transparent 70%);
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
   }
 }
 
-@layer components {
-  /* Grid paper, like the notebook the planner is based on. */
-  .paper-grid {
-    background-image:
-      linear-gradient(var(--grid-line) 1px, transparent 1px),
-      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
-    background-size: 22px 22px;
-    background-position: -1px -1px;
-  }
+@utility pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+@utility pt-safe {
+  padding-top: env(safe-area-inset-top);
 }

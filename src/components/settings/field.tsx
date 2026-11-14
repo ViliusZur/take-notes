@@ -1,3 +1,4 @@
+import { ChevronDown } from "lucide-react";
 import type { ReactNode } from "react";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
@@ -27,13 +28,19 @@ export function Field({
 /** Native select styled like the inputs; used for long lists such as timezones. */
 export function NativeSelect(props: React.ComponentProps<"select">) {
   return (
-    <select
-      {...props}
-      className={cn(
-        "h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:opacity-50 dark:bg-input/30",
-        props.className,
-      )}
-    />
+    <div className="relative">
+      <select
+        {...props}
+        className={cn(
+          "h-11 w-full appearance-none rounded-lg border border-input bg-card pr-9 pl-3 text-base shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:opacity-50 sm:h-9 sm:text-sm dark:bg-input/30",
+          props.className,
+        )}
+      />
+      <ChevronDown
+        className="pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2 text-muted-foreground"
+        aria-hidden
+      />
+    </div>
   );
 }
 

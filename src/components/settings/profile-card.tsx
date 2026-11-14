@@ -33,12 +33,12 @@ export function ProfileCard({ me }: { me: MeDto }) {
 
   return (
     <Card>
-      <form onSubmit={submit}>
+      <form onSubmit={submit} className="contents">
         <CardHeader>
           <CardTitle>Profile</CardTitle>
           <CardDescription>Your timezone decides when your week starts and when we call.</CardDescription>
         </CardHeader>
-        <CardContent className="grid gap-4 pt-5 sm:grid-cols-2">
+        <CardContent className="grid gap-4 sm:grid-cols-2">
           <Field id="profile-name" label="Name" hint="The assistant greets you by your first name.">
             <Input id="profile-name" value={name} onChange={(event) => setName(event.target.value)} maxLength={100} required />
           </Field>
@@ -62,8 +62,8 @@ export function ProfileCard({ me }: { me: MeDto }) {
             </NativeSelect>
           </Field>
         </CardContent>
-        <CardFooter className="justify-end pt-5">
-          <Button type="submit" disabled={save.isPending}>
+        <CardFooter className="justify-end">
+          <Button type="submit" className="max-sm:w-full" disabled={save.isPending}>
             {save.isPending ? "Saving…" : "Save"}
           </Button>
         </CardFooter>
