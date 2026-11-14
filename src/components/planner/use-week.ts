@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { api, ApiError, errorMessage } from "@/lib/api-client";
 import type { TaskDto, WeekDto, WeekNotesDto } from "@/lib/api-types";
 import { decodeTask, decodeWeek, encodeTaskContent } from "@/lib/content-codec";
+import { moveTask, nextPositions, PlacementError, type Placement, type TaskMove } from "@/lib/task-order";
 import type { WeekKey } from "@/lib/weeks";
 import { useCodec } from "@/components/encryption/encryption-gate";
 
@@ -26,7 +27,22 @@ export function useWeek(key: WeekKey, initialWeek: WeekDto | null) {
   });
 }
 
-export type TaskPatch = Partial<Pick<TaskDto, "title" | "assignedDate" | "status" | "skippedReason" | "position">>;
+export type TaskPatch = Partial<Pick<TaskDto, "title" | "assignedDate" | "status" | "skippedReason">> & {
+  /** Drop the task at a spot in one of its lists. */
+  place?: Placement;
+};
+
+/** The week's tasks after a move, as the server will arrange them. */
+function arrange(tasks: TaskDto[], taskId: string, move: TaskMove) {
+  if (move.assignedDate === undefined && !move.place) return tasks;
+  try {
+    return moveTask(tasks, taskId, move);
+  } catch (error) {
+    // The server refuses it too; keep the cache as it is.
+    if (error instanceof PlacementError) return tasks;
+    throw error;
+  }
+}
 
 /**
  * Every write to a week runs in one mutation scope, so writes reach the server in order
@@ -73,7 +89,7 @@ export function useWeekActions(key: WeekKey) {
             assignedDate: input.assignedDate,
             status: "open",
             skippedReason: null,
-            position: Number.MAX_SAFE_INTEGER,
+            ...nextPositions(week.tasks),
             version: 0,
             callId: null,
             carriedOverFromTaskId: null,
@@ -103,15 +119,19 @@ export function useWeekActions(key: WeekKey) {
     onMutate: async ({ taskId, patch }) => {
       await queryClient.cancelQueries({ queryKey });
       const previous = current()?.tasks.find((t) => t.id === taskId);
+      const { place, ...fields } = patch;
       setWeek((week) => ({
         ...week,
-        tasks: week.tasks.map((t) => (t.id === taskId ? { ...t, ...patch, version: t.version } : t)),
+        tasks: arrange(week.tasks, taskId, { assignedDate: fields.assignedDate, place }).map((t) =>
+          t.id === taskId ? { ...t, ...fields, version: t.version } : t,
+        ),
       }));
       return { previous };
     },
     onSuccess: replaceTask,
     onError: (error, _variables, context) => {
       if (context?.previous) replaceTask(context.previous);
+      // Refetching also undoes the renumbering of the other tasks in its lists.
       handleError(error);
     },
   });

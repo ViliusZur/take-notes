@@ -37,7 +37,7 @@ export async function applyPlan(
   const existing = await plannerRepo.listTasks(tx, week.id);
   const seen = new Set(existing.map((task) => normalize(task.title)));
   const candidates = new Set(args.carryOverCandidateIds);
-  let position = await plannerRepo.nextTaskPosition(tx, week.id);
+  let { position, dayPosition } = await plannerRepo.nextTaskPositions(tx, week.id);
 
   const items = [
     ...plan.tasks.map((task) => ({ ...task, title: task.title, kind: "weekly" as const })),
@@ -63,6 +63,7 @@ export async function applyPlan(
       carriedOverFromTaskId:
         item.carriedOverFromTaskId && candidates.has(item.carriedOverFromTaskId) ? item.carriedOverFromTaskId : null,
       position: position++,
+      dayPosition: dayPosition++,
     });
     taskIds.push(task.id);
   }

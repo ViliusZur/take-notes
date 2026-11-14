@@ -11,7 +11,10 @@ const patchSchema = z.object({
   assignedDate: isoDate.nullable().optional(),
   status: z.enum(TASK_STATUSES).optional(),
   skippedReason: skippedReason.nullable().optional(),
-  position: z.number().int().min(0).optional(),
+  /** Where the task lands in one of its lists, e.g. after dragging it. */
+  place: z
+    .object({ list: z.enum(["weekly", "day"]), before: z.uuid().nullable() })
+    .optional(),
 });
 
 async function taskIdFrom(context: Context) {

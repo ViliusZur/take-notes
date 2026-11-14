@@ -1,6 +1,6 @@
 "use client";
 
-import { useDraggable } from "@dnd-kit/core";
+import { useDraggable, useDroppable } from "@dnd-kit/core";
 import { GripVertical, MoreHorizontal, Pencil, PhoneCall, RotateCcw, SkipForward, Trash2 } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
@@ -25,10 +25,8 @@ import { Textarea } from "@/components/ui/textarea";
 import type { TaskDto } from "@/lib/api-types";
 import { cn } from "@/lib/utils";
 import { dayOfMonth, formatWeekday, formatWeekdayLong } from "@/lib/weeks";
+import { justDragged, type DragData, type ListId, type RowData } from "./task-dnd";
 import type { WeekActions } from "./use-week";
-
-/** What a dragged task carries; see `onDragEnd` in the week planner. */
-export type TaskDragData = { task: TaskDto };
 
 const CHIP = "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] leading-4 font-medium";
 
@@ -37,7 +35,7 @@ export function TaskItem({
   dates,
   today,
   actions,
-  location,
+  list,
   showDay = false,
 }: {
   task: TaskDto;
@@ -45,7 +43,7 @@ export function TaskItem({
   today: string;
   actions: WeekActions;
   /** Where this row is shown; a task can appear on the weekly list and under its day. */
-  location: "weekly" | "day";
+  list: ListId;
   /** Show which day the task is planned for (used on the weekly list). */
   showDay?: boolean;
 }) {
@@ -53,10 +51,18 @@ export function TaskItem({
   const [skipOpen, setSkipOpen] = useState(false);
   const pending = task.id.startsWith("temp-");
   const { attributes, listeners, setNodeRef, setActivatorNodeRef, isDragging } = useDraggable({
-    id: `${location}:${task.id}`,
-    data: { task } satisfies TaskDragData,
+    id: `${list}:${task.id}`,
+    data: { task, list } satisfies DragData,
     disabled: pending || editing,
   });
+  // Measured only, to find the spot between rows; drops land on the list.
+  const { setNodeRef: setRowRef } = useDroppable({
+    id: `row:${list}:${task.id}`,
+    data: { kind: "row", list, taskId: task.id } satisfies RowData,
+  });
+  // Each sensor listens for its own event: touch on the whole row, mouse and keys on the handle.
+  const listener = (name: "onTouchStart" | "onMouseDown" | "onKeyDown") =>
+    listeners?.[name] as ((event: React.SyntheticEvent) => void) | undefined;
   const done = task.status === "done";
   const skipped = task.status === "skipped";
   const showMeta = (showDay && task.assignedDate) || skipped || task.callId;
@@ -74,21 +80,32 @@ export function TaskItem({
 
   return (
     <li
-      ref={setNodeRef}
+      ref={(node) => {
+        setNodeRef(node);
+        setRowRef(node);
+      }}
+      // Touch screens: press and hold anywhere on the row, then drag.
+      onTouchStart={listener("onTouchStart")}
+      onClickCapture={(event) => {
+        if (!justDragged()) return;
+        event.preventDefault();
+        event.stopPropagation();
+      }}
       className={cn(
-        "group relative flex items-start gap-1 rounded-xl py-1.5 pr-1 pl-1 transition-colors hover:bg-accent/60 pointer-coarse:pl-2.5",
+        "group relative flex items-start gap-1 rounded-xl py-1.5 pr-1 pl-1 transition-colors hover:bg-accent/60 pointer-coarse:pl-2.5 pointer-coarse:select-none pointer-coarse:[-webkit-touch-callout:none]",
         pending && "opacity-60",
         isDragging && "opacity-35",
       )}
     >
-      {/* Drag with a mouse; on touch screens, the menu moves tasks between days. */}
+      {/* Mouse and keyboard drag with the handle; touch screens use the whole row (above). */}
       <button
         type="button"
         ref={setActivatorNodeRef}
         {...attributes}
-        {...listeners}
-        aria-label={`Drag "${task.title}" to a day`}
-        title="Drag to a day"
+        onMouseDown={listener("onMouseDown")}
+        onKeyDown={listener("onKeyDown")}
+        aria-label={`Move "${task.title}"`}
+        title="Drag to reorder, or onto another day"
         className="mt-2 flex h-5 w-4 shrink-0 cursor-grab touch-none items-center justify-center rounded text-muted-foreground/0 group-hover:text-muted-foreground/60 hover:text-primary focus-visible:text-primary focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:outline-none active:cursor-grabbing disabled:cursor-default pointer-coarse:hidden"
       >
         <GripVertical className="size-3.5" aria-hidden />

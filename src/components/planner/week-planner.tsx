@@ -5,15 +5,13 @@ import {
   DragOverlay,
   KeyboardSensor,
   MouseSensor,
-  pointerWithin,
-  rectIntersection,
   TouchSensor,
   useDndContext,
   useDroppable,
   useSensor,
   useSensors,
-  type CollisionDetection,
   type DragEndEvent,
+  type DragMoveEvent,
   type DragStartEvent,
 } from "@dnd-kit/core";
 import { ChevronLeft, ChevronRight, GripVertical, ListTodo, PhoneCall, Plus, Target } from "lucide-react";
@@ -21,6 +19,7 @@ import Link from "next/link";
 import { useId, useRef, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import type { TaskDto, WeekDto } from "@/lib/api-types";
+import { dayList, weeklyList } from "@/lib/task-order";
 import { cn } from "@/lib/utils";
 import {
   dayOfMonth,
@@ -38,22 +37,22 @@ import { EncryptionGate } from "@/components/encryption/encryption-gate";
 import { AddTaskForm } from "./add-task-form";
 import { NotesPanel } from "./notes-panel";
 import { SaveIndicator } from "./save-indicator";
-import { TaskItem, type TaskDragData } from "./task-item";
+import {
+  collisionDetection,
+  dayListId,
+  dropMove,
+  keyboardCoordinates,
+  createDragTracker,
+  noteDragEnded,
+  slotOf,
+  type DragData,
+  type DropData,
+  type ListId,
+  type Slot,
+} from "./task-dnd";
+import { TaskItem } from "./task-item";
 import { useAutosave } from "./use-autosave";
 import { useWeek, useWeekActions, type WeekActions } from "./use-week";
-
-function byPosition(a: TaskDto, b: TaskDto) {
-  return a.position - b.position;
-}
-
-/** Drop targets: a day, or the weekly list (no day). */
-type DropTarget = { date: string | null };
-
-/** Prefer whatever is under the pointer; fall back to overlap for keyboard dragging. */
-const collisionDetection: CollisionDetection = (args) => {
-  const underPointer = pointerWithin(args);
-  return underPointer.length > 0 ? underPointer : rectIntersection(args);
-};
 
 /** Below the sticky header and, on phones, the sticky view switcher. */
 const SCROLL_MARGIN = "scroll-mt-[calc(env(safe-area-inset-top)+8rem)] lg:scroll-mt-24";
@@ -61,20 +60,20 @@ const SCROLL_MARGIN = "scroll-mt-[calc(env(safe-area-inset-top)+8rem)] lg:scroll
 /** Highlights while a task is dragged over it, and hints while any task is being dragged. */
 function DropZone({
   dropId,
-  date,
+  data,
   className,
   children,
   as: Tag = "section",
   ...rest
 }: {
   dropId: string;
-  date: string | null;
+  data: DropData;
   className?: string;
   children: ReactNode;
   as?: "section" | "div" | "button";
 } & React.AriaAttributes &
   Pick<React.HTMLAttributes<HTMLElement>, "id" | "role" | "onClick" | "title">) {
-  const { setNodeRef, isOver } = useDroppable({ id: dropId, data: { date } satisfies DropTarget });
+  const { setNodeRef, isOver } = useDroppable({ id: dropId, data });
   const { active } = useDndContext();
   return (
     <Tag
@@ -153,30 +152,50 @@ function WeekView({ week, today }: { week: WeekDto; today: string }) {
 
   // The weekly list is the master to-do list: weekly tasks (even once planned for a day)
   // plus anything without a day. Day sections show what is planned for that day.
-  const weeklyTasks = week.tasks.filter((task) => task.kind === "weekly" || task.assignedDate === null).sort(byPosition);
-  const tasksByDay = new Map(
-    week.dates.map((date) => [date, week.tasks.filter((task) => task.assignedDate === date).sort(byPosition)]),
-  );
+  const weeklyTasks = weeklyList(week.tasks);
+  const tasksByDay = new Map(week.dates.map((date) => [date, dayList(week.tasks, date)]));
 
-  // Drag a task onto a day to plan it, or onto the weekly list to clear its day.
+  // Drag a task within a list to reorder it, into another list to move it there, or onto a day
+  // in the strip to plan it for that day.
   const dndId = useId();
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 4 } }),
     useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 8 } }),
-    useSensor(KeyboardSensor),
+    useSensor(KeyboardSensor, { coordinateGetter: keyboardCoordinates }),
   );
-  const [dragged, setDragged] = useState<TaskDto | null>(null);
+  const [drag, setDrag] = useState<DragData | null>(null);
+  const [slot, setSlot] = useState<Slot | null>(null);
+  const [tracker] = useState(createDragTracker);
+
+  // Where the dragged task would land, shown as a line, unless the drop would change nothing.
+  const pending = drag && slot?.kind === "list" && dropMove(week.tasks, drag, slot) ? slot : null;
+  const dropIndex = (list: ListId) => (pending?.list === list ? pending.index : null);
+
+  function trackSlot(event: DragMoveEvent) {
+    const next = slotOf(event.collisions);
+    if (tracker.track(next)) setSlot(next);
+  }
 
   function onDragStart(event: DragStartEvent) {
-    setDragged((event.active.data.current as TaskDragData | undefined)?.task ?? null);
+    tracker.track(null);
+    setSlot(null);
+    setDrag((event.active.data.current as DragData | undefined) ?? null);
+    if (typeof TouchEvent !== "undefined" && event.activatorEvent instanceof TouchEvent) navigator.vibrate?.(10);
+  }
+
+  function stopDragging() {
+    setDrag(null);
+    setSlot(null);
+    noteDragEnded();
   }
 
   function onDragEnd(event: DragEndEvent) {
-    setDragged(null);
-    const task = (event.active.data.current as TaskDragData | undefined)?.task;
-    const target = event.over?.data.current as DropTarget | undefined;
-    if (!task || !target || task.assignedDate === target.date) return;
-    actions.updateTask(task.id, { assignedDate: target.date });
+    stopDragging();
+    const data = event.active.data.current as DragData | undefined;
+    const target = slotOf(event.collisions);
+    tracker.track(target);
+    const move = data && target ? dropMove(week.tasks, data, target) : null;
+    if (data && move) actions.updateTask(data.task.id, move);
   }
 
   const panelProps = (panel: View) => ({
@@ -190,9 +209,12 @@ function WeekView({ week, today }: { week: WeekDto; today: string }) {
       id={dndId}
       sensors={sensors}
       collisionDetection={collisionDetection}
+      accessibility={{ announcements: tracker.announcements }}
       onDragStart={onDragStart}
+      onDragMove={trackSlot}
+      onDragOver={trackSlot}
       onDragEnd={onDragEnd}
-      onDragCancel={() => setDragged(null)}
+      onDragCancel={stopDragging}
     >
       <div className="flex flex-col gap-4 lg:gap-6">
         <WeekHeader week={key} currentWeek={currentWeek} />
@@ -250,6 +272,8 @@ function WeekView({ week, today }: { week: WeekDto; today: string }) {
                   tasks={tasksByDay.get(date) ?? []}
                   dates={week.dates}
                   actions={actions}
+                  draggedId={drag?.task.id ?? null}
+                  dropIndex={dropIndex(dayListId(date))}
                 />
               ))}
             </div>
@@ -262,6 +286,8 @@ function WeekView({ week, today }: { week: WeekDto; today: string }) {
               dates={week.dates}
               today={today}
               actions={actions}
+              draggedId={drag?.task.id ?? null}
+              dropIndex={dropIndex("weekly")}
               className={cn(view !== "todo" && "max-lg:hidden")}
             />
             <NotesPanel
@@ -274,7 +300,7 @@ function WeekView({ week, today }: { week: WeekDto; today: string }) {
           </div>
         </div>
       </div>
-      <DragOverlay dropAnimation={null}>{dragged && <DragPreview task={dragged} />}</DragOverlay>
+      <DragOverlay dropAnimation={null}>{drag && <DragPreview task={drag.task} />}</DragOverlay>
     </DndContext>
   );
 }
@@ -471,7 +497,7 @@ function DayStrip({
             key={date}
             as="button"
             dropId={`strip:${date}`}
-            date={date}
+            data={{ kind: "strip", date }}
             aria-label={`${formatWeekdayLong(date)}, ${formatMonthDay(date)}${isToday ? ", today" : ""}: ${tasks.length} task${tasks.length === 1 ? "" : "s"}`}
             onClick={() =>
               document.getElementById(`day-${date}`)?.scrollIntoView({ behavior: "smooth", block: "start" })
@@ -517,12 +543,16 @@ function DaySection({
   tasks,
   dates,
   actions,
+  draggedId,
+  dropIndex,
 }: {
   date: string;
   today: string;
   tasks: TaskDto[];
   dates: string[];
   actions: WeekActions;
+  draggedId: string | null;
+  dropIndex: number | null;
 }) {
   const [adding, setAdding] = useState(false);
   const isToday = date === today;
@@ -533,8 +563,8 @@ function DaySection({
   return (
     <DropZone
       id={`day-${date}`}
-      dropId={`day:${date}`}
-      date={date}
+      dropId={dayListId(date)}
+      data={{ kind: "list", list: dayListId(date) }}
       aria-label={`${weekday}, ${formatMonthDay(date)}`}
       className={cn("px-2 py-2 sm:px-3", SCROLL_MARGIN, isToday && "bg-primary/4")}
     >
@@ -565,11 +595,15 @@ function DaySection({
         </Button>
       </div>
       {tasks.length > 0 && (
-        <ul>
-          {tasks.map((task) => (
-            <TaskItem key={task.id} task={task} dates={dates} today={today} actions={actions} location="day" />
-          ))}
-        </ul>
+        <TaskRows
+          list={dayListId(date)}
+          tasks={tasks}
+          dates={dates}
+          today={today}
+          actions={actions}
+          draggedId={draggedId}
+          dropIndex={dropIndex}
+        />
       )}
       {adding && (
         <AddTaskForm
@@ -590,6 +624,8 @@ function WeeklyList({
   dates,
   today,
   actions,
+  draggedId,
+  dropIndex,
   className,
   ...panel
 }: {
@@ -597,6 +633,8 @@ function WeeklyList({
   dates: string[];
   today: string;
   actions: WeekActions;
+  draggedId: string | null;
+  dropIndex: number | null;
   className?: string;
   id: string;
   role: "tabpanel";
@@ -609,7 +647,7 @@ function WeeklyList({
     <DropZone
       {...panel}
       dropId="weekly"
-      date={null}
+      data={{ kind: "list", list: "weekly" }}
       aria-label="To do this week"
       className={cn("flex flex-col rounded-2xl border bg-card shadow-xs lg:min-h-0", className)}
     >
@@ -639,19 +677,17 @@ function WeeklyList({
         )}
       </div>
       {tasks.length > 0 ? (
-        <ul className="px-2 py-2 sm:px-3 lg:min-h-0 lg:overflow-y-auto">
-          {tasks.map((task) => (
-            <TaskItem
-              key={task.id}
-              task={task}
-              dates={dates}
-              today={today}
-              actions={actions}
-              location="weekly"
-              showDay
-            />
-          ))}
-        </ul>
+        <TaskRows
+          className="px-2 py-2 sm:px-3 lg:min-h-0 lg:overflow-y-auto"
+          list="weekly"
+          tasks={tasks}
+          dates={dates}
+          today={today}
+          actions={actions}
+          draggedId={draggedId}
+          dropIndex={dropIndex}
+          showDay
+        />
       ) : (
         <p className="px-4 py-6 text-center text-sm text-muted-foreground sm:px-5">
           What do you want to get done this week?
@@ -663,6 +699,48 @@ function WeeklyList({
         onAdd={(title) => actions.createTask({ title, assignedDate: null })}
       />
     </DropZone>
+  );
+}
+
+/** A list's tasks, with a line where a dragged task would land (`dropIndex` doesn't count the dragged task). */
+function TaskRows({
+  list,
+  tasks,
+  draggedId,
+  dropIndex,
+  className,
+  ...itemProps
+}: {
+  list: ListId;
+  tasks: TaskDto[];
+  dates: string[];
+  today: string;
+  actions: WeekActions;
+  draggedId: string | null;
+  dropIndex: number | null;
+  showDay?: boolean;
+  className?: string;
+}) {
+  const rows: ReactNode[] = [];
+  let index = 0;
+  for (const task of tasks) {
+    if (task.id !== draggedId) {
+      if (index === dropIndex) rows.push(<DropLine key="drop-line" />);
+      index++;
+    }
+    rows.push(<TaskItem key={task.id} task={task} list={list} {...itemProps} />);
+  }
+  if (index === dropIndex) rows.push(<DropLine key="drop-line" />);
+  return <ul className={className}>{rows}</ul>;
+}
+
+/** Marks the drop spot between two rows without moving them. */
+function DropLine() {
+  return (
+    <li aria-hidden className="pointer-events-none relative h-0">
+      <span className="absolute inset-x-2 top-0 h-0.5 -translate-y-1/2 rounded-full bg-primary" />
+      <span className="absolute top-0 left-1 size-2 -translate-y-1/2 rounded-full border-2 border-primary bg-card" />
+    </li>
   );
 }
 

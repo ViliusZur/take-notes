@@ -5,6 +5,7 @@ import { HttpError, notFound, VersionConflict } from "@/server/http";
 import { contentValue } from "@/server/modules/encryption/content";
 import { withContentAccess } from "@/server/modules/encryption/service";
 import type { TaskDto, TaskKind, TaskStatus, WeekDto, WeekNotesDto, WeekSummaryDto } from "@/lib/api-types";
+import { moveTask, PlacementError, type Placement } from "@/lib/task-order";
 import { isValidWeekKey, weekDates, weekStartDate, type WeekKey } from "@/lib/weeks";
 import * as repo from "./repository";
 
@@ -28,6 +29,7 @@ export function toTaskDto(task: Task): TaskDto {
     status: task.status,
     skippedReason: task.skippedReason,
     position: task.position,
+    dayPosition: task.dayPosition,
     version: task.version,
     callId: task.callId,
     carriedOverFromTaskId: task.carriedOverFromTaskId,
@@ -117,7 +119,7 @@ export async function createTask(
       title,
       assignedDate: input.assignedDate ?? null,
       kind: input.kind ?? (input.assignedDate ? "ad_hoc" : "weekly"),
-      position: await repo.nextTaskPosition(tx, week.id),
+      ...(await repo.nextTaskPositions(tx, week.id)),
     });
     return toTaskDto(task);
   });
@@ -128,7 +130,8 @@ export type TaskPatch = {
   assignedDate?: string | null;
   status?: TaskStatus;
   skippedReason?: string | null;
-  position?: number;
+  /** Drop the task at a spot in one of its lists (after any day change in the same patch). */
+  place?: Placement;
 };
 
 export async function updateTask(
@@ -146,8 +149,33 @@ export async function updateTask(
 
     const changes: Parameters<typeof repo.updateTask>[3] = {};
     if (patch.title !== undefined) changes.title = contentValue(mode, "task.title", patch.title);
-    if (patch.assignedDate !== undefined) changes.assignedDate = patch.assignedDate;
-    if (patch.position !== undefined) changes.position = patch.position;
+
+    // Moving the task: other tasks in its lists may be renumbered too (without new versions).
+    const renumbered: Task[] = [];
+    const newDate = patch.assignedDate !== undefined && patch.assignedDate !== task.assignedDate;
+    if (newDate || patch.place) {
+      await repo.lockWeekOrder(tx, week.id);
+      const weekTasks = await repo.listTasks(tx, week.id);
+      let arranged: Task[];
+      try {
+        arranged = moveTask(weekTasks, task.id, { assignedDate: patch.assignedDate, place: patch.place });
+      } catch (error) {
+        if (error instanceof PlacementError) throw new HttpError(422, error.message);
+        throw error;
+      }
+      const before = new Map(weekTasks.map((row) => [row.id, row]));
+      for (const row of arranged) {
+        const old = before.get(row.id)!;
+        if (row.id === task.id) {
+          if (row.assignedDate !== old.assignedDate) changes.assignedDate = row.assignedDate;
+          if (row.position !== old.position) changes.position = row.position;
+          if (row.dayPosition !== old.dayPosition) changes.dayPosition = row.dayPosition;
+        } else if (row.position !== old.position || row.dayPosition !== old.dayPosition) {
+          renumbered.push(row);
+        }
+      }
+    }
+
     if (patch.status !== undefined) {
       changes.status = patch.status;
       changes.completedAt = patch.status === "done" ? new Date() : null;
@@ -164,6 +192,9 @@ export async function updateTask(
 
     const updated = await repo.updateTask(tx, task.id, expectedVersion ?? task.version, changes);
     if (!updated) throw new VersionConflict(toTaskDto(task));
+    for (const row of renumbered) {
+      await repo.setTaskPositions(tx, row.id, { position: row.position, dayPosition: row.dayPosition });
+    }
     return toTaskDto(updated);
   });
 }
