@@ -1,6 +1,6 @@
 ---
 name: jobs-done
-description: Ships the current code changes end to end - creates a branch from main, bumps the project version, commits with a descriptive message, opens a PR, merges it once CI passes, tags the merge commit with the matching semantic version, then deletes the branch locally and on GitHub. Use whenever the user says "job's done" (also "jobs done", "job done"), or runs /jobs-done.
+description: Ships the current code changes end to end - creates a branch from main, bumps the project version, commits with a descriptive message, opens a PR, merges it once CI passes, tags the merge commit with the matching semantic version, deletes the branch locally and on GitHub, then saves what it learned to memory and clears the conversation so the next feature starts fresh in the same session. Use whenever the user says "job's done" (also "jobs done", "job done"), or runs /jobs-done.
 argument-hint: "[optional note about the change]"
 ---
 
@@ -8,8 +8,9 @@ argument-hint: "[optional note about the change]"
 
 The user says "job's done" when the work in the working tree is finished and should land on the
 default branch. Saying it authorizes everything below: branch, version bump, commit, push, PR,
-merge once CI passes, pushing a version tag, and deleting the branch. Do it without asking again, except where a
-step says to stop.
+merge once CI passes, pushing a version tag, deleting the branch, saving what was learned to
+memory, and clearing the conversation. Do it without asking again, except where a step says to
+stop.
 
 If the user added text to the command, use it as context for the commit message and PR description.
 
@@ -161,7 +162,42 @@ Only after `gh pr view <pr> --json state --jq .state` says `MERGED`:
 - `git push origin --delete <branch>` (skip if GitHub already deleted it), then
   `git fetch --prune origin`.
 
-## 9. Report
+## 9. Save what was learned
 
-A few lines: the PR link, the merge commit, the new tag and why that bump, that the branch is gone
-locally and on GitHub, and anything still to do (deploy steps, migrations).
+The user builds the next feature in this same session, starting from a cleared conversation
+(step 10). Nothing in the conversation carries over a clear, so anything worth keeping has to be
+written down first.
+
+Do steps 9 and 10 only when the job is finished: the PR is merged and tagged. If an earlier step
+stopped (CI failed, merge refused, a question is waiting), report and stop without clearing; the
+conversation holds what's needed to finish.
+
+Save to your persistent memory: the memory directory your instructions describe, following its
+rules (one fact per file, the index, updating an existing memory rather than adding a duplicate).
+Look back over the whole conversation, not just this skill's run, for what the next feature
+would benefit from and the repo doesn't already record:
+
+- How the user likes to work: corrections they gave, preferences, approaches they confirmed.
+- Decisions and why they were made, constraints, things to avoid.
+- Gotchas found the hard way: a command that doesn't work here, a setup quirk, an external
+  service detail.
+- Work the user set aside for later.
+
+Skip what the code, git history, PR or tag already say (what shipped, how files are laid out) and
+anything that only mattered for this change. If nothing qualifies, save nothing. Without a
+persistent memory, put the learnings in the report instead.
+
+## 10. Report and clear the session
+
+Report in a few lines: the PR link, the merge commit, the new tag and why that bump, that the
+branch is gone locally and on GitHub, anything still to do (deploy steps, migrations), and what
+you saved to memory (or that there was nothing new). Then say the conversation is being cleared:
+the PR and tag hold the record, and "Resume previous session" brings the old conversation back.
+
+Clear the conversation as the very last action:
+
+- In the Claude desktop app: call `mcp__ccd_session_mgmt__clear_session` with
+  `session_id: "self"` (load it with ToolSearch first if it is deferred). The clear happens when
+  the turn ends, so everything you want the user to read must already be said. The app may ask
+  the user to approve it.
+- Anywhere without that tool (the terminal CLI): ask the user to run `/clear`.

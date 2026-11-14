@@ -1,6 +1,6 @@
 ---
 name: send-that-shit
-description: Sends the current code changes straight to the current branch - bumps the project version, commits with a detailed message, pushes the commit to the branch it is on, then tags that commit with the matching semantic version and pushes the tag. No new branch, no PR, no merge. Use whenever the user says "send that shit" (also "send this shit", "send that sh*t"), or runs /send-that-shit.
+description: Sends the current code changes straight to the current branch - bumps the project version, commits with a detailed message, pushes the commit to the branch it is on, then tags that commit with the matching semantic version and pushes the tag, then saves what it learned to memory and clears the conversation so the next feature starts fresh in the same session. No new branch, no PR, no merge. Use whenever the user says "send that shit" (also "send this shit", "send that sh*t"), or runs /send-that-shit.
 argument-hint: "[optional note about the change]"
 ---
 
@@ -9,8 +9,9 @@ argument-hint: "[optional note about the change]"
 The user says "send that shit" when the work in the working tree is finished and should go
 straight onto the branch they are on, with a version tag. It is the quick sibling of "job's done":
 same version and tag rules, but no new branch, no pull request and no merge. Saying it authorizes
-everything below: version bump, commit, push to the current branch, and pushing a version tag. Do
-it without asking again, except where a step says to stop.
+everything below: version bump, commit, push to the current branch, pushing a version tag, saving
+what was learned to memory, and clearing the conversation. Do it without asking again, except
+where a step says to stop.
 
 If the user added text to the command, use it as context for the commit message and the tag
 message.
@@ -144,8 +145,44 @@ without opening the diff.
   git push origin vX.Y.Z
   ```
 
-## 6. Report
+## 6. Save what was learned
 
-A few lines: the branch and the pushed commit (short sha and subject), the new tag and why that
-bump, anything left out of the commit, and anything still to do (deploy steps, migrations). CI
-may run on the push; this skill doesn't wait for it, so say that if the repo has CI.
+The user builds the next feature in this same session, starting from a cleared conversation
+(step 7). Nothing in the conversation carries over a clear, so anything worth keeping has to be
+written down first.
+
+Do steps 6 and 7 only when the job is finished: the commit is pushed and its tag is pushed. If an
+earlier step stopped (push rejected, rebase conflict, a question is waiting), report and stop
+without clearing; the conversation holds what's needed to finish.
+
+Save to your persistent memory: the memory directory your instructions describe, following its
+rules (one fact per file, the index, updating an existing memory rather than adding a duplicate).
+Look back over the whole conversation, not just this skill's run, for what the next feature
+would benefit from and the repo doesn't already record:
+
+- How the user likes to work: corrections they gave, preferences, approaches they confirmed.
+- Decisions and why they were made, constraints, things to avoid.
+- Gotchas found the hard way: a command that doesn't work here, a setup quirk, an external
+  service detail.
+- Work the user set aside for later.
+
+Skip what the code, git history or tag already say (what shipped, how files are laid out) and
+anything that only mattered for this change. If nothing qualifies, save nothing. Without a
+persistent memory, put the learnings in the report instead.
+
+## 7. Report and clear the session
+
+Report in a few lines: the branch and the pushed commit (short sha and subject), the new tag and
+why that bump, anything left out of the commit, anything still to do (deploy steps, migrations),
+and what you saved to memory (or that there was nothing new). CI may run on the push; this skill
+doesn't wait for it, so say that if the repo has CI. Then say the conversation is being cleared:
+the commit and tag hold the record, and "Resume previous session" brings the old conversation
+back.
+
+Clear the conversation as the very last action:
+
+- In the Claude desktop app: call `mcp__ccd_session_mgmt__clear_session` with
+  `session_id: "self"` (load it with ToolSearch first if it is deferred). The clear happens when
+  the turn ends, so everything you want the user to read must already be said. The app may ask
+  the user to approve it.
+- Anywhere without that tool (the terminal CLI): ask the user to run `/clear`.
