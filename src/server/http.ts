@@ -24,6 +24,28 @@ export class VersionConflict extends HttpError {
   }
 }
 
+/** The planner is end-to-end encrypted and this request did not prove it was unlocked. */
+export class NotebookLocked extends HttpError {
+  constructor() {
+    super(423, "Your notebook is locked. Unlock it with your encryption password.", { code: "locked" });
+  }
+}
+
+/** The client sent an unlock proof, but encryption is off (it was turned off elsewhere). */
+export class EncryptionOff extends HttpError {
+  constructor() {
+    super(409, "Encryption was turned off. Reload to continue.", { code: "encryption_off" });
+  }
+}
+
+/**
+ * Proof that the browser holds the encryption password, sent on every request from an unlocked
+ * notebook. Derived from the password, but useless for decrypting.
+ */
+export function unlockProof(request: Request): string | null {
+  return request.headers.get("x-unlock-proof");
+}
+
 export type SessionUser = { id: string; email: string; name: string };
 
 export async function requireUser(): Promise<SessionUser> {

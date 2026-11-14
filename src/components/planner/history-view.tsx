@@ -5,16 +5,27 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { EncryptionGate, useCodec } from "@/components/encryption/encryption-gate";
 import { api } from "@/lib/api-client";
 import type { WeekSummaryDto } from "@/lib/api-types";
+import { decodeWeekSummaries } from "@/lib/content-codec";
 import { formatWeekRange, weekPath } from "@/lib/weeks";
 import { Marker, toneAt } from "./marker";
 
-export function HistoryView({ initialYear }: { initialYear: number }) {
+export function HistoryView({ initialYear, encrypted }: { initialYear: number; encrypted: boolean }) {
+  return (
+    <EncryptionGate encrypted={encrypted}>
+      <HistoryList initialYear={initialYear} />
+    </EncryptionGate>
+  );
+}
+
+function HistoryList({ initialYear }: { initialYear: number }) {
+  const codec = useCodec();
   const [isoYear, setIsoYear] = useState(initialYear);
   const { data: weeks, isPending, isError } = useQuery({
     queryKey: ["weeks", isoYear],
-    queryFn: () => api<WeekSummaryDto[]>(`/api/v1/years/${isoYear}/weeks`),
+    queryFn: async () => decodeWeekSummaries(codec, await api<WeekSummaryDto[]>(`/api/v1/years/${isoYear}/weeks`)),
   });
   const newestFirst = [...(weeks ?? [])].reverse();
 

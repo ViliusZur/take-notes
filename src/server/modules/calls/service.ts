@@ -1,13 +1,14 @@
 import "server-only";
 import { and, count, desc, eq, gte, inArray, isNull, lt, notInArray, or, sql } from "drizzle-orm";
 import { DateTime } from "luxon";
-import { db } from "@/server/db";
+import { db, type Executor } from "@/server/db";
 import { calls, user, type Call, type CallImportResult, type CallStatus } from "@/server/db/schema";
 import { env } from "@/server/env";
 import { requireFeature } from "@/server/features";
 import { HttpError, notFound } from "@/server/http";
 import { log } from "@/server/log";
 import * as plannerRepo from "@/server/modules/planner/repository";
+import { isEncrypted, lockOwner } from "@/server/modules/encryption/service";
 import { findSchedule, revokeCallConsent } from "@/server/modules/schedules/service";
 import { sendCallMissed, sendPlanningReminder, sendPlanReady } from "@/server/modules/notifications/service";
 import { claudeExtractor } from "@/server/modules/extraction/claude";
@@ -179,6 +180,8 @@ export async function startCall(args: {
   const now = args.now ?? DateTime.utc();
   requireFeature("calls");
   const owner = await loadOwner(args.userId);
+  // The assistant would read the plan aloud and write it back in plain text.
+  if (await isEncrypted(db, args.userId)) throw new HttpError(409, "Planning calls are off while encryption is on");
   if (!owner.phoneE164 || !owner.phoneVerifiedAt) throw new HttpError(422, "Verify a phone number first");
   const schedule = await findSchedule(args.userId);
   if (!schedule?.callConsentAt) throw new HttpError(422, "Turn on planning calls and give consent first");
@@ -290,7 +293,8 @@ export async function handleVoiceEvent(
 
   const startedAt = event.startedAt ?? call.startedAt ?? undefined;
   const endedAt = event.endedAt ?? now.toJSDate();
-  const transcript = event.transcript.trim() || null;
+  // A call still running when its owner turned encryption on must not leave a plain-text transcript.
+  const transcript = (await isEncrypted(db, call.userId)) ? null : event.transcript.trim() || null;
   const [ended] = await db
     .update(calls)
     .set({
@@ -386,6 +390,11 @@ export async function processCall(
   if (!call) return;
 
   try {
+    if (await isEncrypted(db, call.userId)) {
+      await discardEncryptedOwnersCall(db, call, now);
+      await deleteProviderCopy(call);
+      return;
+    }
     const owner = await loadOwner(call.userId);
     const target = targetOf(call);
     const callTime = DateTime.fromJSDate(call.startedAt ?? call.createdAt);
@@ -422,6 +431,11 @@ export async function processCall(
     if (plan.userAskedToStopCalls) await revokeCallConsent(call.userId);
 
     const importResult = await db.transaction(async (tx) => {
+      // Encryption may have been turned on during extraction: then nothing is written.
+      if (await lockOwner(tx, call.userId, "share")) {
+        await discardEncryptedOwnersCall(tx, call, now);
+        return null;
+      }
       const result = plan.planCaptured
         ? await applyPlan(tx, {
             userId: call.userId,
@@ -445,6 +459,10 @@ export async function processCall(
         .where(eq(calls.id, call.id));
       return result;
     });
+    if (!importResult) {
+      await deleteProviderCopy(call);
+      return;
+    }
 
     log.debug(`Processed call '${call.id}'`, {
       tasks: importResult.taskIds.length,
@@ -481,6 +499,25 @@ export async function processCall(
   }
 }
 
+/** Closes a call of an owner with encryption on without extracting or storing anything from it. */
+async function discardEncryptedOwnersCall(ex: Executor, call: Call, now: DateTime) {
+  log.warn(`Discarded call '${call.id}' without a plan: its owner has encryption on`);
+  await ex
+    .update(calls)
+    .set({
+      status: "processed",
+      processedAt: now.toJSDate(),
+      processingLeaseUntil: null,
+      transcript: null,
+      transcriptExpiresAt: null,
+      extractedPlan: null,
+      importResult: null,
+      summary: null,
+      error: null,
+    })
+    .where(eq(calls.id, call.id));
+}
+
 async function deleteProviderCopy(call: Call) {
   try {
     const voice = provider();
@@ -496,7 +533,11 @@ export async function undoImport(userId: string, callId: string): Promise<CallDt
   if (call.status !== "processed" || !call.importResult) throw new HttpError(409, "This call has nothing to undo");
   if (call.importResult.undoneAt) throw new HttpError(409, "This call was already undone");
   const result = call.importResult;
-  await db.transaction((tx) => undoPlan(tx, userId, call.id, result, targetOf(call)));
+  await db.transaction(async (tx) => {
+    // Undo edits planner content in plain text, which an encrypted notebook no longer has.
+    if (await lockOwner(tx, userId, "share")) throw new HttpError(409, "This call has nothing to undo");
+    await undoPlan(tx, userId, call.id, result, targetOf(call));
+  });
   return toCallDto(await findOwnedCall(userId, callId));
 }
 

@@ -1,7 +1,7 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
-import { CalendarDays, History, LogOut, Settings } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { CalendarDays, History, Lock, LogOut, Settings } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Suspense, useEffect, useRef } from "react";
@@ -18,6 +18,7 @@ import { api } from "@/lib/api-client";
 import type { MeDto } from "@/lib/api-types";
 import { authClient } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
+import { useEncryption } from "@/components/encryption/encryption-provider";
 import { Logo } from "./logo";
 import { ThemeToggle } from "./theme-toggle";
 
@@ -70,11 +71,16 @@ function NavLinks({ pathname }: { pathname: string | null }) {
 
 export function AppHeader() {
   const router = useRouter();
+  const queryClient = useQueryClient();
+  const encryption = useEncryption();
   const { data: me } = useQuery({ queryKey: ["me"], queryFn: () => api<MeDto>("/api/v1/me") });
   useTimezoneSync(me);
 
   async function signOut() {
+    await encryption.lock();
     await authClient.signOut();
+    // Nothing of this account stays in memory for whoever uses the browser next.
+    queryClient.clear();
     router.push("/");
     router.refresh();
   }
@@ -88,6 +94,18 @@ export function AppHeader() {
         <Suspense fallback={<NavLinks pathname={null} />}>
           <ActiveNavLinks />
         </Suspense>
+        {encryption.status?.enabled && encryption.vault && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => void encryption.lock()}
+            aria-label="Lock notebook"
+            title="Lock your notebook now"
+          >
+            <Lock aria-hidden />
+            <span className="hidden md:inline">Lock</span>
+          </Button>
+        )}
         <ThemeToggle />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

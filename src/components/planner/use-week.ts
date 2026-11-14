@@ -4,7 +4,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { api, ApiError, errorMessage } from "@/lib/api-client";
 import type { TaskDto, WeekDto, WeekNotesDto } from "@/lib/api-types";
+import { decodeTask, decodeWeek, encodeTaskContent } from "@/lib/content-codec";
 import type { WeekKey } from "@/lib/weeks";
+import { useCodec } from "@/components/encryption/encryption-gate";
 
 export function weekQueryKey({ isoYear, isoWeek }: WeekKey) {
   return ["week", isoYear, isoWeek] as const;
@@ -14,12 +16,13 @@ function weekUrl({ isoYear, isoWeek }: WeekKey) {
   return `/api/v1/years/${isoYear}/weeks/${isoWeek}`;
 }
 
-export function useWeek(initialWeek: WeekDto) {
-  const key = { isoYear: initialWeek.isoYear, isoWeek: initialWeek.isoWeek };
+/** The week with its content decoded. `initialWeek` comes from the server render for plain notebooks only. */
+export function useWeek(key: WeekKey, initialWeek: WeekDto | null) {
+  const codec = useCodec();
   return useQuery({
     queryKey: weekQueryKey(key),
-    queryFn: () => api<WeekDto>(weekUrl(key)),
-    initialData: initialWeek,
+    queryFn: async () => decodeWeek(codec, await api<WeekDto>(weekUrl(key))),
+    initialData: initialWeek ?? undefined,
   });
 }
 
@@ -28,9 +31,11 @@ export type TaskPatch = Partial<Pick<TaskDto, "title" | "assignedDate" | "status
 /**
  * Every write to a week runs in one mutation scope, so writes reach the server in order
  * and each one reads the latest version (for `If-Match`) from the cache when it runs.
+ * The cache holds plain text; content is encoded (encrypted) on the way out and decoded on the way back.
  */
 export function useWeekActions(key: WeekKey) {
   const queryClient = useQueryClient();
+  const codec = useCodec();
   const queryKey = weekQueryKey(key);
   const scope = { id: `week-${key.isoYear}-${key.isoWeek}` };
 
@@ -51,8 +56,10 @@ export function useWeekActions(key: WeekKey) {
 
   const createTask = useMutation({
     scope,
-    mutationFn: ({ input }: { input: { title: string; assignedDate: string | null }; tempId: string }) =>
-      api<TaskDto>(`${weekUrl(key)}/tasks`, { method: "POST", body: input }),
+    mutationFn: async ({ input }: { input: { title: string; assignedDate: string | null }; tempId: string }) => {
+      const body = await encodeTaskContent(codec, input);
+      return decodeTask(codec, await api<TaskDto>(`${weekUrl(key)}/tasks`, { method: "POST", body }));
+    },
     onMutate: async ({ input, tempId }) => {
       await queryClient.cancelQueries({ queryKey });
       setWeek((week) => ({
@@ -88,9 +95,10 @@ export function useWeekActions(key: WeekKey) {
 
   const updateTask = useMutation({
     scope,
-    mutationFn: ({ taskId, patch }: { taskId: string; patch: TaskPatch }) => {
+    mutationFn: async ({ taskId, patch }: { taskId: string; patch: TaskPatch }) => {
+      const body = await encodeTaskContent(codec, patch);
       const version = current()?.tasks.find((t) => t.id === taskId)?.version;
-      return api<TaskDto>(`/api/v1/tasks/${taskId}`, { method: "PATCH", body: patch, version });
+      return decodeTask(codec, await api<TaskDto>(`/api/v1/tasks/${taskId}`, { method: "PATCH", body, version }));
     },
     onMutate: async ({ taskId, patch }) => {
       await queryClient.cancelQueries({ queryKey });
@@ -125,17 +133,30 @@ export function useWeekActions(key: WeekKey) {
 
   const setDirection = useMutation({
     scope,
-    mutationFn: (bigPictureDirection: string) =>
-      api<WeekDto>(weekUrl(key), { method: "PUT", body: { bigPictureDirection }, version: current()?.version }),
-    onSuccess: (week) =>
-      setWeek((cached) => ({ ...cached, bigPictureDirection: week.bigPictureDirection, version: week.version })),
+    mutationFn: async (direction: string) => {
+      const bigPictureDirection = await codec.encode("week.direction", direction);
+      const week = await api<WeekDto>(weekUrl(key), {
+        method: "PUT",
+        body: { bigPictureDirection },
+        version: current()?.version,
+      });
+      return { bigPictureDirection: await codec.decode("week.direction", week.bigPictureDirection), version: week.version };
+    },
+    onSuccess: (saved) => setWeek((cached) => ({ ...cached, ...saved })),
     onError: handleError,
   });
 
   const setNotes = useMutation({
     scope,
-    mutationFn: (notes: string) =>
-      api<WeekNotesDto>(`${weekUrl(key)}/notes`, { method: "PUT", body: { notes }, version: current()?.notesVersion }),
+    mutationFn: async (text: string) => {
+      const notes = await codec.encode("week.notes", text);
+      const saved = await api<WeekNotesDto>(`${weekUrl(key)}/notes`, {
+        method: "PUT",
+        body: { notes },
+        version: current()?.notesVersion,
+      });
+      return { notes: await codec.decode("week.notes", saved.notes), notesVersion: saved.notesVersion };
+    },
     onSuccess: (saved) => setWeek((week) => ({ ...week, ...saved, version: Math.max(week.version, 1) })),
     onError: (error) => {
       if (error instanceof ApiError && error.isConflict) {
