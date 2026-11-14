@@ -139,14 +139,14 @@ describe("trusted origins", () => {
   it("trusts a custom domain with and without www, plus the Vercel URLs", async () => {
     const { trustedOrigins } = await import("@/server/env");
     process.env.BETTER_AUTH_URL = "https://weekly-notes.com";
-    process.env.VERCEL_URL = "take-notes-abc123.vercel.app";
+    process.env.VERCEL_URL = "weekly-notes-abc123.vercel.app";
     process.env.VERCEL_PROJECT_PRODUCTION_URL = "www.weekly-notes.com";
     resetEnvCacheForTests();
     expect(trustedOrigins().sort()).toEqual(
       [
         "https://weekly-notes.com",
         "https://www.weekly-notes.com",
-        "https://take-notes-abc123.vercel.app",
+        "https://weekly-notes-abc123.vercel.app",
       ].sort(),
     );
   });

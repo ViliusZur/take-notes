@@ -93,6 +93,9 @@ export function fromBase64Url(text: string) {
   return bytes;
 }
 
+// The "take-notes/..." labels below are part of the encryption format: they feed the
+// AES-GCM associated data and the HKDF key derivation. They keep the app's old name on
+// purpose. Changing any of them makes every existing encrypted note undecryptable.
 const WRAP_AAD = encoder.encode("take-notes/data-key/v1");
 
 function fieldAad(field: ContentField) {

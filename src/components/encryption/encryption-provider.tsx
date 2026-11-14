@@ -12,7 +12,7 @@ export const ENCRYPTION_QUERY_KEY = ["encryption"] as const;
 const CONTENT_QUERY_KEYS = [["week"], ["weeks"]] as const;
 
 /** Tabs of this app tell each other about activity and locking, so the timeout follows the user, not the tab. */
-const CHANNEL_NAME = "take-notes-encryption";
+const CHANNEL_NAME = "weekly-notes-encryption";
 const ACTIVITY_EVENTS = ["pointerdown", "pointermove", "keydown", "wheel", "touchstart", "scroll"] as const;
 type ChannelMessage = { type: "activity"; at: number } | { type: "lock" };
 
