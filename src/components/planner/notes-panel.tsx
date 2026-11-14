@@ -5,15 +5,13 @@ import { useState, type ComponentProps } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
+import { NotesEditor } from "./notes-editor";
 import { SaveIndicator } from "./save-indicator";
 import { useAutosave } from "./use-autosave";
 
-const EDITOR_CLASSES =
-  "h-full w-full resize-none bg-transparent text-base leading-relaxed outline-none [field-sizing:fixed] placeholder:text-muted-foreground sm:text-[15px]";
-
 /**
- * The week's notes page. It never grows the layout: the text scrolls inside a fixed area,
- * and a full-screen mode gives room for long notes. Saves while you type.
+ * The week's notes page, with formatting. It never grows the layout: the text scrolls inside a
+ * fixed area, and a full-screen mode gives room for long notes. Saves while you type.
  */
 export function NotesPanel({
   value,
@@ -30,16 +28,13 @@ export function NotesPanel({
   const [fullScreen, setFullScreen] = useState(false);
 
   const editor = (autoFocus: boolean) => (
-    <textarea
-      aria-label={`Notes for ${weekLabel}`}
+    <NotesEditor
+      label={`Notes for ${weekLabel}`}
       value={draft}
-      onChange={(event) => setDraft(event.target.value)}
+      onChange={setDraft}
       onBlur={() => void flush()}
-      placeholder="Notes, ideas, checklists…"
-      maxLength={100_000}
       autoFocus={autoFocus}
-      spellCheck
-      className={EDITOR_CLASSES}
+      className="h-full"
     />
   );
 
@@ -72,7 +67,7 @@ export function NotesPanel({
 
       {/* The editor is absolutely positioned so its content can never push the page taller. */}
       <div className="relative min-h-[max(18rem,calc(100dvh-26rem))] flex-1 lg:min-h-40">
-        <div className="absolute inset-0 px-4 pt-2 pb-4 sm:px-5">{!fullScreen && editor(false)}</div>
+        <div className="absolute inset-0 px-4 pt-1.5 pb-4 sm:px-5">{!fullScreen && editor(false)}</div>
       </div>
 
       <Dialog
@@ -84,6 +79,8 @@ export function NotesPanel({
       >
         <DialogContent
           showCloseButton={false}
+          // The editor focuses itself once it loads; the dialog would otherwise focus the first button.
+          onOpenAutoFocus={(event) => event.preventDefault()}
           className="inset-0 flex h-dvh max-h-none w-screen max-w-none flex-col gap-3 rounded-none border-0 bg-card p-4 pt-[calc(1rem+env(safe-area-inset-top))] pb-[calc(1rem+env(safe-area-inset-bottom))] sm:inset-0 sm:top-0 sm:left-0 sm:max-h-none sm:max-w-none sm:translate-x-0 sm:translate-y-0 sm:rounded-none sm:p-6"
         >
           <div className="mx-auto flex w-full max-w-3xl items-center justify-between gap-3">

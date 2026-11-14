@@ -52,7 +52,9 @@ node -v
    week number, big picture, and each day's plan. The right page has the weekly to-do list and the
    week's notes. Try it out: add to the weekly list, plan items for a day (the ⋯ menu → **Plan
    for**), tick them off, skip one with a reason, write notes (they scroll inside the box and save
-   as you type; the ⤢ button opens them full screen), and flip between weeks. **History** lists
+   as you type; the toolbar does bold, italic, underline, strikethrough, text size, and bulleted
+   and numbered lists, nested with Tab or the indent buttons; the ⤢ button opens them full screen),
+   and flip between weeks. **History** lists
    past weeks.
 5. Open **Settings**. The **Optional features** card lists what is turned off.
 

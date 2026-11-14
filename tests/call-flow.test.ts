@@ -211,6 +211,33 @@ describe("Sunday planning call", () => {
     expect(undone.notes).toBe("Bring X-rays");
   });
 
+  it("adds to formatted notes as paragraphs, escaped", async () => {
+    const owner = await callableUser();
+    await setNotes(owner.id, nextWeek, "<ul><li><p>Bring <strong>X-rays</strong></p></li></ul>", 0);
+
+    await runPlanningCron(sundayRun);
+    const [call] = await callsFor(owner.id);
+    await handleVoiceEvent({
+      kind: "ended",
+      providerCallId: `fake-${call.id}`,
+      outcome: "completed",
+      endedReason: "customer-ended-call",
+      transcript: "User: plan",
+    });
+    await processCall(call.id, {
+      extractor: async (input) => ({ ...planFrom(input), weekNotes: "Compare <b> & <i> tags" }),
+    });
+
+    const planned = await getWeek(owner.id, nextWeek);
+    expect(planned.notes).toBe(
+      "<ul><li><p>Bring <strong>X-rays</strong></p></li></ul><p></p>" +
+        "<p>From your planning call:</p><p>Compare &lt;b&gt; &amp; &lt;i&gt; tags</p>",
+    );
+
+    await undoImport(owner.id, call.id);
+    expect((await getWeek(owner.id, nextWeek)).notes).toBe("<ul><li><p>Bring <strong>X-rays</strong></p></li></ul>");
+  });
+
   it("retries an unanswered call once, then emails", async () => {
     const owner = await callableUser();
     await runPlanningCron(sundayRun);

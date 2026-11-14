@@ -35,7 +35,8 @@ export const CONTENT_LIMITS: Record<ContentField, number> = {
   "task.title": 200,
   "task.skippedReason": 500,
   "week.direction": 2000,
-  "week.notes": 100_000,
+  // Notes are HTML: room for the formatting around the editor's 100,000 characters of text.
+  "week.notes": 300_000,
 };
 
 /** Upper bound of the stored form: at most 3 UTF-8 bytes per code unit, a 16-byte tag, base64, IV and prefix. */

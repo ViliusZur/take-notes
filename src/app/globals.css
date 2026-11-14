@@ -158,3 +158,43 @@
 @utility pt-safe {
   padding-top: env(safe-area-inset-top);
 }
+
+/* Formatted notes (the Tiptap editor). Lines sit tight like a page of notes; lists get their markers back. */
+@layer components {
+  .notes-content {
+    min-height: 100%;
+    outline: none;
+  }
+  .notes-content :is(ul, ol) {
+    padding-inline-start: 1.5em;
+  }
+  /* Markers change with each level of the same kind of list, so a numbered sublist under bullets starts at 1. */
+  .notes-content ul {
+    list-style-type: disc;
+  }
+  .notes-content ul ul {
+    list-style-type: circle;
+  }
+  .notes-content ul ul ul {
+    list-style-type: square;
+  }
+  .notes-content ol {
+    list-style-type: decimal;
+  }
+  .notes-content ol ol {
+    list-style-type: lower-alpha;
+  }
+  .notes-content ol ol ol {
+    list-style-type: lower-roman;
+  }
+  .notes-content ul > li::marker {
+    color: var(--muted-foreground);
+  }
+  .notes-content p.is-editor-empty:first-child::before {
+    content: attr(data-placeholder);
+    float: left;
+    height: 0;
+    pointer-events: none;
+    color: var(--muted-foreground);
+  }
+}

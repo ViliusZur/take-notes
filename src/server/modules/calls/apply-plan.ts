@@ -4,6 +4,7 @@ import type { Transaction } from "@/server/db";
 import { calls, tasks, type CallImportResult } from "@/server/db/schema";
 import * as plannerRepo from "@/server/modules/planner/repository";
 import type { ExtractedPlan } from "@/server/modules/extraction/schema";
+import { isRichText, plainTextToHtml } from "@/lib/rich-text";
 import { dateForWeekday, type WeekKey } from "@/lib/weeks";
 
 const NOTES_SEPARATOR = "\n\n";
@@ -83,7 +84,12 @@ export async function applyPlan(
   let notesAppended: string | null = null;
   if (noteLines.length) {
     const block = `From your planning call:\n${noteLines.join("\n")}`;
-    notesAppended = week.notes.trim() ? `${NOTES_SEPARATOR}${block}` : block;
+    if (isRichText(week.notes)) {
+      // Formatted notes are HTML: add the block as paragraphs, after an empty one.
+      notesAppended = `<p></p>${plainTextToHtml(block)}`;
+    } else {
+      notesAppended = week.notes.trim() ? `${NOTES_SEPARATOR}${block}` : block;
+    }
     await plannerRepo.updateWeekNotes(tx, week.id, week.notesVersion, week.notes + notesAppended);
   }
 
