@@ -336,3 +336,17 @@ describe("encrypted notebook", () => {
     expect((await getNotebookContent(owner.id, vault.proof)).tasks).toEqual([]);
   });
 });
+
+describe("ordering an encrypted notebook", () => {
+  it("reorders tasks with the unlock proof, and not without it", async () => {
+    const { owner, taskId } = await seededUser();
+    const { vault } = await encrypt(owner.id);
+    const title = await vaultCodec(vault.key).encode("task.title", "Second");
+    const second = await createTask(owner.id, week, { title }, vault.proof);
+    const place = { list: "weekly" as const, before: taskId };
+    await expect(updateTask(owner.id, second.id, { place }, undefined, null)).rejects.toMatchObject({ status: 423 });
+    await updateTask(owner.id, second.id, { place }, undefined, vault.proof);
+    const { tasks } = await getWeek(owner.id, week, vault.proof);
+    expect([...tasks].sort((a, b) => a.position - b.position).map((t) => t.id)).toEqual([second.id, taskId]);
+  });
+});

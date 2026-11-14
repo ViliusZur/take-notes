@@ -154,7 +154,10 @@ export const tasks = pgTable(
     assignedDate: date("assigned_date"),
     status: text("status", { enum: TASK_STATUSES }).notNull().default("open"),
     skippedReason: text("skipped_reason"),
+    /** Order in the week's to-do list. */
     position: integer("position").notNull().default(0),
+    /** Order under the task's day; a weekly task planned for a day has a place in both lists. */
+    dayPosition: integer("day_position").notNull().default(0),
     version: integer("version").notNull().default(1),
     completedAt: timestamp("completed_at", { withTimezone: true }),
     ...timestamps,

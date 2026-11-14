@@ -10,7 +10,10 @@ export type TaskDto = {
   assignedDate: string | null;
   status: TaskStatus;
   skippedReason: string | null;
+  /** Order in the weekly list; see `@/lib/task-order`. */
   position: number;
+  /** Order under its day. */
+  dayPosition: number;
   version: number;
   callId: string | null;
   carriedOverFromTaskId: string | null;

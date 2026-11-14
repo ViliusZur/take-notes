@@ -49,12 +49,30 @@ export async function listTasks(ex: Executor, weekId: string) {
     .orderBy(asc(tasks.position), asc(tasks.createdAt));
 }
 
-export async function nextTaskPosition(ex: Executor, weekId: string) {
+/** Positions at the bottom of every list of the week, for a new task. */
+export async function nextTaskPositions(ex: Executor, weekId: string) {
   const [row] = await ex
-    .select({ max: sql<number>`coalesce(max(${tasks.position}), -1)`.mapWith(Number) })
+    .select({
+      position: sql<number>`coalesce(max(${tasks.position}), -1) + 1`.mapWith(Number),
+      dayPosition: sql<number>`coalesce(max(${tasks.dayPosition}), -1) + 1`.mapWith(Number),
+    })
     .from(tasks)
     .where(eq(tasks.weekId, weekId));
-  return (row?.max ?? -1) + 1;
+  return { position: row?.position ?? 0, dayPosition: row?.dayPosition ?? 0 };
+}
+
+/** Serializes reordering within a week, so two moves never interleave their renumbering. */
+export async function lockWeekOrder(ex: Executor, weekId: string) {
+  await ex.select({ id: weeks.id }).from(weeks).where(eq(weeks.id, weekId)).for("no key update");
+}
+
+/** Renumbers a task in its lists. Order isn't content, so the task's version stays. */
+export async function setTaskPositions(
+  ex: Executor,
+  taskId: string,
+  positions: Pick<Task, "position" | "dayPosition">,
+) {
+  await ex.update(tasks).set(positions).where(eq(tasks.id, taskId));
 }
 
 export async function insertTask(ex: Executor, values: typeof tasks.$inferInsert) {
@@ -76,7 +94,9 @@ export async function updateTask(
   ex: Executor,
   taskId: string,
   expectedVersion: number,
-  patch: Partial<Pick<Task, "title" | "assignedDate" | "status" | "skippedReason" | "position" | "completedAt">>,
+  patch: Partial<
+    Pick<Task, "title" | "assignedDate" | "status" | "skippedReason" | "position" | "dayPosition" | "completedAt">
+  >,
 ) {
   const [task] = await ex
     .update(tasks)
