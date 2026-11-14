@@ -1,6 +1,6 @@
 ---
 name: jobs-done
-description: Ships the current code changes end to end - creates a branch from main, commits with a descriptive message, opens a PR, merges it once CI passes, then deletes the branch locally and on GitHub. Use whenever the user says "job's done" (also "jobs done", "job done"), or runs /jobs-done.
+description: Ships the current code changes end to end - creates a branch from main, commits with a descriptive message, opens a PR, merges it once CI passes, tags the merge commit with a semantic version, then deletes the branch locally and on GitHub. Use whenever the user says "job's done" (also "jobs done", "job done"), or runs /jobs-done.
 argument-hint: "[optional note about the change]"
 ---
 
@@ -8,7 +8,8 @@ argument-hint: "[optional note about the change]"
 
 The user says "job's done" when the work in the working tree is finished and should land on the
 default branch. Saying it authorizes everything below: branch, commit, push, PR, merge once CI
-passes, and deleting the branch. Do it without asking again, except where a step says to stop.
+passes, pushing a version tag, and deleting the branch. Do it without asking again, except where a
+step says to stop.
 
 If the user added text to the command, use it as context for the commit message and PR description.
 
@@ -85,7 +86,53 @@ background and wait for it to finish rather than polling.
 - Merge refused (conflicts, branch protection, required review): report why and stop. Never force
   it, and never enable GitHub auto-merge or change repository settings to get around it.
 
-## 6. Clean up
+## 6. Tag the merge with a semantic version
+
+Once `gh pr view <pr> --json state --jq .state` says `MERGED`, put an annotated version tag on the
+merge commit and push it.
+
+- Merge commit: `gh pr view <pr> --json mergeCommit --jq .mergeCommit.oid`. Run `git fetch origin`
+  and confirm it is on BASE: `git merge-base --is-ancestor <sha> origin/BASE`.
+- Previous version: the newest semver tag reachable from it,
+  `git tag --merged <sha> --list 'v[0-9]*' --sort=-v:refname | head -1`. Keep the repo's existing
+  prefix style (`v1.2.3` or `1.2.3`; default `v`). No tags yet: the previous version is the
+  manifest's `version` (`package.json`, `Cargo.toml`, `pyproject.toml`, ...) or `0.0.0`, and the
+  new tag covers the project's history so far.
+- Bump by the biggest change since the previous version:
+  - **major**: breaking for users, API clients, or deployers. Removed or incompatible behavior or
+    endpoints, migrations that drop or rewrite data, newly required config. While the major
+    version is 0, bump the minor instead, and never go to 1.0.0 unless the user asks.
+  - **minor**: new features or capabilities, new endpoints, additive migrations.
+  - **patch**: fixes, small tweaks, copy changes, refactors, tests, docs, tooling, CI.
+- Never move, reuse, or delete an existing tag. If the version is already taken, stop and ask.
+- The message is detailed and written for someone deciding whether to deploy, not a raw commit
+  dump. Build it from `git log --first-parent --format='%h %s' <previous>..<sha>` (just `<sha>`
+  when there is no previous tag), and read the merged PRs (`gh pr view <n> --json title,body`) for
+  the details:
+
+  ```text
+  vX.Y.Z: <one-line summary of the release>
+
+  <Two or three sentences: what this release brings and why it matters.>
+
+  Changes since <previous version>:
+  - <Change, in plain words> (#<pr>)
+  - ...
+
+  Upgrade notes:
+  - <Migrations to run, new env vars, breaking changes, follow-ups; or "None.">
+  ```
+
+- Create and push it (git signs it if the user's config asks for signed tags):
+
+  ```bash
+  git tag -a vX.Y.Z <merge-sha> -F - <<'EOF'
+  <message>
+  EOF
+  git push origin vX.Y.Z
+  ```
+
+## 7. Clean up
 
 Only after `gh pr view <pr> --json state --jq .state` says `MERGED`:
 
@@ -96,7 +143,7 @@ Only after `gh pr view <pr> --json state --jq .state` says `MERGED`:
 - `git push origin --delete <branch>` (skip if GitHub already deleted it), then
   `git fetch --prune origin`.
 
-## 7. Report
+## 8. Report
 
-A few lines: the PR link, the merge commit, that the branch is gone locally and on GitHub, and
-anything still to do (deploy steps, migrations).
+A few lines: the PR link, the merge commit, the new tag and why that bump, that the branch is gone
+locally and on GitHub, and anything still to do (deploy steps, migrations).
