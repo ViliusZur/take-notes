@@ -14,7 +14,8 @@ import type { EncryptionKeysDto } from "@/lib/api-types";
 export const KDF = "PBKDF2-SHA256" as const;
 /** OWASP's 2023+ recommendation for PBKDF2-HMAC-SHA256. */
 export const KDF_ITERATIONS = 600_000;
-export const MIN_PASSWORD_LENGTH = 12;
+/** Short passwords are allowed, but anyone with the database can try guesses offline, so longer is safer. */
+export const MIN_PASSWORD_LENGTH = 4;
 export const MAX_PASSWORD_LENGTH = 1024;
 
 /** Minutes without user activity before an unlocked notebook locks itself. */

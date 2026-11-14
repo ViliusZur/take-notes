@@ -5,6 +5,7 @@ import { KeyRound, Lock, LockKeyhole, LockOpen, TriangleAlert } from "lucide-rea
 import { useId, useState, type FormEvent, type ReactNode } from "react";
 import { toast } from "sonner";
 import { UnlockForm } from "@/components/encryption/encryption-gate";
+import { PasswordInput } from "@/components/encryption/password-input";
 import { ENCRYPTION_QUERY_KEY, useEncryption } from "@/components/encryption/encryption-provider";
 import { changePassword, turnOffEncryption, turnOnEncryption } from "@/components/encryption/notebook-conversion";
 import { Badge } from "@/components/ui/badge";
@@ -19,7 +20,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { api, errorMessage } from "@/lib/api-client";
 import type { EncryptionStatusDto, FeaturesDto } from "@/lib/api-types";
@@ -213,11 +213,10 @@ function PasswordFields({ form, label }: { form: ReturnType<typeof usePasswordFo
       <Field
         id={`${id}-password`}
         label={label}
-        hint={`At least ${MIN_PASSWORD_LENGTH} characters. A few random words work well. Don't reuse your sign-in password.`}
+        hint={`At least ${MIN_PASSWORD_LENGTH} characters, but longer is much safer: a few random words work well. Don't reuse your sign-in password.`}
       >
-        <Input
+        <PasswordInput
           id={`${id}-password`}
-          type="password"
           autoComplete="new-password"
           value={form.password}
           onChange={(event) => form.setPassword(event.target.value)}
@@ -226,9 +225,8 @@ function PasswordFields({ form, label }: { form: ReturnType<typeof usePasswordFo
         />
       </Field>
       <Field id={`${id}-confirm`} label="Repeat the password">
-        <Input
+        <PasswordInput
           id={`${id}-confirm`}
-          type="password"
           autoComplete="new-password"
           value={form.confirm}
           onChange={(event) => form.setConfirm(event.target.value)}

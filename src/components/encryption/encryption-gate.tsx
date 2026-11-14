@@ -4,12 +4,12 @@ import { LockKeyhole } from "lucide-react";
 import Link from "next/link";
 import { createContext, useContext, useId, useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { errorMessage } from "@/lib/api-client";
 import { formatLockTimeout, plainCodec, vaultCodec, WrongPasswordError, type ContentCodec } from "@/lib/encryption";
 import { cn } from "@/lib/utils";
 import { useEncryption } from "./encryption-provider";
+import { PasswordInput } from "./password-input";
 
 const CodecContext = createContext<ContentCodec | null>(null);
 
@@ -99,9 +99,8 @@ export function UnlockForm({ autoFocus = false, className }: { autoFocus?: boole
     <form onSubmit={submit} className={cn("space-y-2", className)}>
       <Label htmlFor={id}>Encryption password</Label>
       <div className="flex gap-2">
-        <Input
+        <PasswordInput
           id={id}
-          type="password"
           autoComplete="current-password"
           autoFocus={autoFocus}
           value={password}
