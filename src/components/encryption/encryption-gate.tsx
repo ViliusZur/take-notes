@@ -37,7 +37,7 @@ function UnlockScreen() {
   const { status, lastLockReason } = useEncryption();
   if (!status) {
     return (
-      <div className="flex min-h-64 items-center justify-center text-sm text-muted-foreground" role="status">
+      <div className="flex min-h-[50dvh] items-center justify-center text-sm text-muted-foreground" role="status">
         Checking encryption…
       </div>
     );
@@ -51,13 +51,13 @@ function UnlockScreen() {
         : "Your notes and tasks are encrypted. Enter your encryption password to read them on this device.";
 
   return (
-    <div className="mx-auto flex min-h-[60vh] w-full max-w-md flex-col justify-center">
-      <div className="paper-grid space-y-5 rounded-2xl border bg-card p-6 shadow-sm sm:p-8">
-        <span className="inline-flex size-11 items-center justify-center rounded-xl bg-hl-violet text-hl-violet-fg">
+    <div className="mx-auto flex min-h-[60dvh] w-full max-w-md flex-col justify-center">
+      <div className="space-y-5 rounded-3xl border bg-card p-5 shadow-sm sm:p-8">
+        <span className="inline-flex size-12 items-center justify-center rounded-2xl bg-tone-violet text-tone-violet-fg">
           <LockKeyhole className="size-5" aria-hidden />
         </span>
         <div className="space-y-1.5">
-          <h1 className="font-display text-2xl font-bold tracking-tight">Your notebook is locked</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">Your notebook is locked</h1>
           <p className="text-sm text-muted-foreground">{reason}</p>
         </div>
         <UnlockForm autoFocus />
@@ -98,7 +98,7 @@ export function UnlockForm({ autoFocus = false, className }: { autoFocus?: boole
   return (
     <form onSubmit={submit} className={cn("space-y-2", className)}>
       <Label htmlFor={id}>Encryption password</Label>
-      <div className="flex gap-2">
+      <div className="flex flex-col gap-2 sm:flex-row">
         <PasswordInput
           id={id}
           autoComplete="current-password"

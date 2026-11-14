@@ -72,7 +72,7 @@ function ScheduleForm({ me, schedule, features, encrypted }: Props) {
 
   return (
     <Card>
-      <form onSubmit={submit}>
+      <form onSubmit={submit} className="contents">
         <CardHeader>
           <CardTitle>Weekly planning</CardTitle>
           <CardDescription>
@@ -83,7 +83,7 @@ function ScheduleForm({ me, schedule, features, encrypted }: Props) {
                 : "Get an email reminder to plan at the same time every week."}
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-5 pt-5">
+        <CardContent className="space-y-5">
           <div className="flex items-center justify-between gap-4">
             <Label htmlFor="schedule-enabled">Plan with me every week</Label>
             <Switch id="schedule-enabled" checked={enabled} onCheckedChange={setEnabled} />
@@ -160,7 +160,7 @@ function ScheduleForm({ me, schedule, features, encrypted }: Props) {
           )}
 
           {needsConsent && (
-            <div className="flex items-start gap-3 rounded-md border p-3">
+            <div className="flex items-start gap-3 rounded-xl border bg-muted/40 p-3.5">
               <Checkbox
                 id="schedule-consent"
                 checked={consent}
@@ -173,13 +173,13 @@ function ScheduleForm({ me, schedule, features, encrypted }: Props) {
             </div>
           )}
         </CardContent>
-        <CardFooter className="flex flex-wrap items-center justify-between gap-3 pt-5">
+        <CardFooter className="flex flex-wrap items-center justify-between gap-3">
           <p className="text-sm text-muted-foreground">
             {schedule.enabled && nextRun
               ? `Next ${schedule.channel === "call" && callsAvailable ? "call" : "reminder"}: ${nextRun}`
               : "Not scheduled."}
           </p>
-          <Button type="submit" disabled={save.isPending || (needsConsent && !consent)}>
+          <Button type="submit" className="max-sm:w-full" disabled={save.isPending || (needsConsent && !consent)}>
             {save.isPending ? "Saving…" : "Save"}
           </Button>
         </CardFooter>

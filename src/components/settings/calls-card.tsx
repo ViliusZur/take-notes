@@ -95,7 +95,7 @@ export function CallsCard({
           </Button>
         </CardAction>
       </CardHeader>
-      <CardContent className="pt-5">
+      <CardContent>
         {!calls?.length ? (
           <p className="text-sm text-muted-foreground">No calls yet.</p>
         ) : (

@@ -72,7 +72,7 @@ export function PhoneCard({ me, features }: { me: MeDto; features: FeaturesDto }
           {features.simulatedSms ? "Demo mode: any number works, no SMS is sent." : "We verify it with a code by SMS."}
         </CardDescription>
       </CardHeader>
-      <CardContent className="pt-5">
+      <CardContent>
         {step.kind === "idle" && me.phoneE164 && (
           <div className="flex flex-wrap items-center justify-between gap-3">
             <p className="font-medium tabular-nums">
@@ -90,11 +90,11 @@ export function PhoneCard({ me, features }: { me: MeDto; features: FeaturesDto }
         )}
 
         {step.kind === "enter" && (
-          <form onSubmit={submitPhone} className="flex flex-wrap items-end gap-3">
-            <Field id="phone" label="Mobile number" className="min-w-56 flex-1" hint="International format, e.g. +37061234567.">
+          <form onSubmit={submitPhone} className="flex flex-col gap-3 sm:flex-row sm:items-end">
+            <Field id="phone" label="Mobile number" className="flex-1" hint="International format, e.g. +37061234567.">
               <Input id="phone" name="phone" type="tel" autoComplete="tel" placeholder="+37061234567" required />
             </Field>
-            <div className="flex gap-2 pb-6">
+            <div className="flex gap-2 *:flex-1 sm:pb-6 sm:*:flex-none">
               {me.phoneVerified && (
                 <Button type="button" variant="ghost" onClick={() => setStep({ kind: "idle" })}>
                   Cancel
@@ -108,11 +108,11 @@ export function PhoneCard({ me, features }: { me: MeDto; features: FeaturesDto }
         )}
 
         {step.kind === "code" && (
-          <form onSubmit={submitCode} className="flex flex-wrap items-end gap-3">
+          <form onSubmit={submitCode} className="flex flex-col gap-3 sm:flex-row sm:items-end">
             <Field
               id="code"
               label={`Code sent to ${step.phone}`}
-              className="min-w-40 flex-1"
+              className="flex-1"
               hint={features.simulatedSms ? "Demo mode: no SMS is sent. Use 000000." : undefined}
             >
               <Input
@@ -125,7 +125,7 @@ export function PhoneCard({ me, features }: { me: MeDto; features: FeaturesDto }
                 autoFocus
               />
             </Field>
-            <div className="flex gap-2 pb-6">
+            <div className="flex gap-2 *:flex-1 sm:pb-6 sm:*:flex-none">
               <Button type="button" variant="ghost" onClick={() => setStep({ kind: "enter" })}>
                 Back
               </Button>

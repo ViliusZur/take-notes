@@ -88,7 +88,7 @@ export function EncryptionCard({ features }: { features: FeaturesDto }) {
       </CardHeader>
 
       {status.enabled && (
-        <CardContent className="space-y-5 pt-5">
+        <CardContent className="space-y-5">
           {!unlocked && (
             <div className="space-y-3 rounded-lg border bg-muted/40 p-4">
               <p className="text-sm text-muted-foreground">

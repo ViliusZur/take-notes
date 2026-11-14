@@ -5,7 +5,10 @@ export default function AppLayout({ children }: LayoutProps<"/">) {
   return (
     <EncryptionProvider>
       <AppHeader />
-      <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6">{children}</main>
+      {/* On phones the bottom tab bar covers the end of the page, so leave room for it. */}
+      <main className="mx-auto w-full max-w-6xl flex-1 px-4 pt-4 pb-[calc(6rem+env(safe-area-inset-bottom))] sm:px-6 sm:pt-6 md:pb-12">
+        {children}
+      </main>
     </EncryptionProvider>
   );
 }
